@@ -2,17 +2,23 @@
 from PIL import Image
 import os
 import re
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-def classificationSegmentation(inputFileName):
+from ClassificationScreening.Classify import PIL_infer
+
+def classificationSegmentation(inputFileName, classificationThreshold):
+    print("This is the classificationSegmentation file path input:", inputFileName)
     image = Image.open(inputFileName)
+    print("it got past the image.open in classificationSegmentation")
     width, height = image.size
     #kostas required size
     chunkSize = 256
 
     uniqueImageIdentifier = ''.join(re.findall(r'\d+', inputFileName))
-    outputFolder = "imageSegmentation/classificationInput"
+    outputFolder = "orientedBoundingBox/test"
     os.makedirs(outputFolder, exist_ok=True)
-
+    listOfRowColumn = []
     # Loop to create and save chunks
     for row in range(0, height, chunkSize):
         for col in range(0, width, chunkSize):
@@ -24,7 +30,10 @@ def classificationSegmentation(inputFileName):
                 yDifference = row + chunkSize - height
             box = (col - xDifference, row - yDifference, col - xDifference + chunkSize, row - yDifference + chunkSize)
             cropped = image.crop(box)
-            cropped.save(f"{outputFolder}/{uniqueImageIdentifier}chunk_{row // chunkSize}_{col // chunkSize}.jpg")
-    print(f"Chunks saved in: {os.path.abspath(outputFolder)}")
+            containsCrossing = PIL_infer(cropped, threshold=classificationThreshold)
+            if containsCrossing:
+                listOfRowColumn.append((row // chunkSize, col // chunkSize))
 
-classificationSegmentation("imageSegmentation/digimapData/tq2678_rgb_250_09.jpg")
+    return listOfRowColumn
+
+# print(classificationSegmentation("imageSegmentation/digimapData/tq2678_rgb_250_09.jpg"))

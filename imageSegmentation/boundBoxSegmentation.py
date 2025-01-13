@@ -1,25 +1,29 @@
 from PIL import Image
 import os
 import re
+import sys
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from ImageSegmentation.ClassificationSegmentation import classificationSegmentation
 #Take images which are highly likely from kostas
 #assume we get a list of tuples (row, column)
-
-#take the row, column, and take it as a center of an image which is a (3 chunk x 3 chunk), the top left of the new image
-#will be row - 1, column - 1
 
 #if the image is in an edge, still keep it in the top right so the georeferencing still works,
 #but black out the areas where it should be empty
 
 
 #At some point will need to update the inputFileName so that the data will be retrieved from a database.
-inputFolder = "imageSegmentation/digimapData"
+inputFolder = "ImageSegmentation/digimapData"
+outputFolder = "OrientedBoundingBox/test/test-data/images"
 
-def boundBoxSegmentation(inputFolder):
+def boundBoxSegmentation(inputFolder, classificationThreshold=0.35):
     for inputFileName in os.listdir(inputFolder):
         if inputFileName.endswith(('.png', '.jpg', '.jpeg')):
+            print(inputFileName)
             try:
                 imagePath = os.path.join(inputFolder, inputFileName)
+                print(f"Attempting to open: {imagePath}")
                 originalImage = Image.open(imagePath)
                 width, height = originalImage.size
                 #Size of bounding box chunks
@@ -27,10 +31,9 @@ def boundBoxSegmentation(inputFolder):
                 #Size of classification chunks
                 smallChunkSize = 256
                 #chunksOfInterest will be retrieved from kostas' program.
-                chunksOfInterest = [(0,0), (1,1), (5,5)]
+                chunksOfInterest = classificationSegmentation(imagePath, classificationThreshold)
                 #This unique identifier needs to be kept all the way to the georeferencing stage so that we know which file to open
                 uniqueImageIdentifier = ''.join(re.findall(r'\d+', imagePath))
-                outputFolder = "orientedBoundingBox/test/test-data/images"
                 os.makedirs(outputFolder, exist_ok=True)
 
                 #data for georeferencing
@@ -59,13 +62,13 @@ def boundBoxSegmentation(inputFolder):
                     box = (topX, topY, topX + largeChunkSize, topY + largeChunkSize)
                     cropped = originalImage.crop(box)
                     cropped.save(f"{outputFolder}/{uniqueImageIdentifier}chunkOfInterest_{row}_{col}.jpg")
-                    with open(f"{outputFolder}/{uniqueImageIdentifier}chunkOfInterest_{row}_{col}.jgw", 'w') as jgwFile:
-                        jgwFile.write(f"{pixelSizeX:.10f}\n")
-                        jgwFile.write(f"{rotationX:.10f}\n")
-                        jgwFile.write(f"{rotationY:.10f}\n")
-                        jgwFile.write(f"{pixelSizeY:.10f}\n")
-                        jgwFile.write(f"{(topLeftXGeo + topX * pixelSizeX):.10f}\n")
-                        jgwFile.write(f"{(topLeftYGeo + topY * pixelSizeY):.10f}\n")
+                    with open(f"{outputFolder}/{uniqueImageIdentifier}chunkOfInterest_{row}_{col}.jgw", 'w') as file:
+                        file.write(f"{pixelSizeX:.10f}\n")
+                        file.write(f"{rotationX:.10f}\n")
+                        file.write(f"{rotationY:.10f}\n")
+                        file.write(f"{pixelSizeY:.10f}\n")
+                        file.write(f"{(topLeftXGeo + topX * pixelSizeX):.10f}\n")
+                        file.write(f"{(topLeftYGeo + topY * pixelSizeY):.10f}\n")
 
                 print(f"Chunks saved in: {os.path.abspath(outputFolder)}")
             except Exception as e:
