@@ -8,9 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from ClassificationScreening.Classify import PIL_infer
 
 def classificationSegmentation(inputFileName, classificationThreshold):
-    print("This is the classificationSegmentation file path input:", inputFileName)
     image = Image.open(inputFileName)
-    print("it got past the image.open in classificationSegmentation")
     width, height = image.size
     #kostas required size
     chunkSize = 256
