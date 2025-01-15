@@ -29,4 +29,10 @@ outputType = "0"
 yoloModelType = 'n'
 
 if __name__ == "__main__":
-    execute(uploadDir, inputType, classificationThreshold, predictionThreshold, saveLabeledImage, outputType, yoloModelType)
+    execute(uploadDir, 
+            inputType, 
+            classificationThreshold, 
+            predictionThreshold, 
+            saveLabeledImage, 
+            outputType, 
+            yoloModelType)

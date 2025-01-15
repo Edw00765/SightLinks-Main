@@ -21,22 +21,77 @@ SightLink is a computer vision system designed to detect and georeference buildi
 - Required Python packages (see requirements.txt)
 - Sufficient disk space for image processing
 - CUDA-capable GPU recommended for faster processing
+- Git
 
-## Installation
+## Installation and Setup
 
 1. Clone the repository:
+
 ```bash
-git clone [repository-url]
+git clone https://github.com/UCL-SightLink/SightLink-Main.git
 cd SightLink-Main
 ```
 
-2. Install the required dependencies:
+2. Create and activate a virtual environment:
+
+```bash
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# On macOS/Linux:
+source venv/bin/activate
+# On Windows:
+venv\Scripts\activate
+```
+
+3. Install the required dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Ensure the model file is present:
-- Place `model.pt` in the `orientedBoundingBox/` directory
+4. Ensure the model files are present:
+
+- Place YOLO model files in the `models/` directory:
+  - `yolo-n.pt` (nano model)
+  - Other model variants as needed
+
+5. Create input directory and place files:
+
+* Place your input files in the input directory
+  * For Digimap data: Place zip files directly downloaded from DigiMap
+  * For custom data: Place individual .jpg/.jgw files or zip archives
+
+## Quick Start
+
+1. After installation, you can quickly run the system using:
+
+```bash
+python run.py
+```
+
+This will:
+
+- Process all files in the input directory
+- Use default parameters
+- Generate output in the timestamped directory under run/output/
+
+2. For more control, you can use the Python API:
+
+```python
+from main import execute
+
+execute(
+    uploadDir="input",           # Input directory
+    inputType="0",              # "0" for Digimap, "1" for custom
+    classificationThreshold=0.35,
+    predictionThreshold=0.5,
+    saveLabeledImage=False,
+    outputType="0",             # "0" for JSON, "1" for TXT
+    yolo_model_type="n"         # "n" for nano model
+)
+```
 
 ## Project Structure
 
@@ -63,6 +118,7 @@ SightLink-Main/
 ### Directory Setup
 
 1. Create required directories if they don't exist:
+
 ```bash
 mkdir -p upload run/output
 ```
@@ -94,6 +150,7 @@ execute(upload_dir, input_type, classification_threshold,
 ### Output Formats
 
 1. JSON Format (outputType="0")
+
    ```json
    [
      {
@@ -105,9 +162,10 @@ execute(upload_dir, input_type, classification_threshold,
      }
    ]
    ```
-
 2. TXT Format (outputType="1")
+
    - Each line represents one building's coordinates:
+
    ```
    lon1,lat1 lon2,lat2 lon3,lat3 lon4,lat4
    lon1,lat1 lon2,lat2 lon3,lat3 lon4,lat4
@@ -124,23 +182,24 @@ run/output/YYYYMMDD_HHMMSS/  # Timestamp-based directory
 ## Processing Pipeline
 
 1. File Extraction
+
    - Handles zip files and individual images
    - Filters out system files and unsupported formats
    - Organizes files for processing
-
 2. Image Segmentation
+
    - Processes large aerial images
    - Prepares images for building detection
-
 3. Building Detection
+
    - Uses YOLO model for oriented bounding box detection
    - Applies confidence thresholds for accurate detection
-
 4. Georeferencing
+
    - Converts pixel coordinates to geographical coordinates
    - Uses .jgw files for accurate coordinate mapping
-
 5. Output Generation
+
    - Creates timestamped output directory
    - Generates selected output format (JSON/TXT)
    - Cleans up temporary files
