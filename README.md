@@ -3,6 +3,7 @@
 SightLink is a computer vision system designed to detect and georeference buildings in aerial imagery. It processes both Digimap and custom aerial imagery, providing oriented bounding boxes with geographical coordinates. The system uses a combination of image segmentation, YOLO-based detection, and georeferencing to accurately identify and locate buildings in aerial photographs.
 
 ## Table of Contents
+
 - [Features](#features)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
@@ -10,7 +11,6 @@ SightLink is a computer vision system designed to detect and georeference buildi
 - [Usage Guide](#usage-guide)
 - [Project Structure](#project-structure)
 - [Technical Details](#technical-details)
-- [Analysis Tools](#analysis-tools)
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
 
@@ -39,12 +39,14 @@ SightLink is a computer vision system designed to detect and georeference buildi
 ## Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/UCL-SightLink/SightLink-Main.git
 cd SightLink-Main
 ```
 
 2. Create and activate a virtual environment:
+
 ```bash
 # Create virtual environment
 python -m venv venv
@@ -57,16 +59,19 @@ venv\Scripts\activate
 ```
 
 3. Install dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
 
 4. Set up model files:
+
 - Download and place YOLO model files in the `models/` directory:
   - `yolo-n.pt` (nano model)
   - Other model variants as needed
 
 5. Create required directories:
+
 ```bash
 mkdir -p input run/output
 ```
@@ -74,10 +79,11 @@ mkdir -p input run/output
 ## Quick Start
 
 1. Place input files in the `input` directory:
+
    - For Digimap data: Place zip files directly downloaded from DigiMap
    - For custom data: Place .jpg/.jgw files or zip archives
-
 2. Run the system:
+
 ```bash
 python run.py
 ```
@@ -85,6 +91,7 @@ python run.py
 ## Usage Guide
 
 ### Basic Usage
+
 ```python
 from main import execute
 
@@ -102,6 +109,7 @@ execute(
 ### Output Formats
 
 1. JSON Format (output_type="0"):
+
 ```json
 [
   {
@@ -115,13 +123,16 @@ execute(
 ```
 
 2. TXT Format (output_type="1"):
+
 - One file per original image
 - Each line represents one building:
+
 ```
 lon1,lat1 lon2,lat2 lon3,lat3 lon4,lat4
 ```
 
 ### Output Directory Structure
+
 ```
 run/output/YYYYMMDD_HHMMSS/  # Timestamp-based directory
 ├── output.json              # If JSON output selected
@@ -130,6 +141,7 @@ run/output/YYYYMMDD_HHMMSS/  # Timestamp-based directory
 ```
 
 ## Project Structure
+
 ```
 SightLink-Main/
 ├── classificationScreening/    # Building classification module
@@ -140,7 +152,7 @@ SightLink-Main/
 │   └── classificationSegmentation.py  # Classification segmentation
 ├── models/                    # YOLO model files
 │   ├── yolo-n.pt             # Nano model
-│   └── [other-models].pt     # Additional model variants
+│   └── MobileNetV3_state_dict_big_train.pth     # Classification Model
 ├── georeference/             # Georeferencing utilities
 │   └── Georeference.py       # Coordinate conversion functions
 ├── utils/                    # Utility functions
@@ -157,54 +169,45 @@ SightLink-Main/
 ## Technical Details
 
 ### Processing Pipeline
+
 1. **File Extraction**
+
    - Handles Digimap zip files and custom inputs
    - Filters system files and unsupported formats
    - Organizes files for processing
-
 2. **Image Segmentation**
+
    - Segments large aerial images
    - Prepares chunks for classification
    - Optimizes for detection accuracy
-
 3. **Building Detection**
+
    - Uses selected YOLO model variant
    - Applies confidence thresholds
    - Supports multiple model types for different performance/accuracy trade-offs
-
 4. **Georeferencing**
+
    - Converts pixel coordinates to geographical coordinates
    - Uses .jgw world files for accurate mapping
    - Handles coordinate system transformations
-
 5. **Output Generation**
+
    - Creates timestamped directories
    - Generates selected output format
    - Optionally saves labeled images
    - Cleans up temporary files
 
 ### Performance Optimization
+
 - GPU acceleration for faster processing
 - Memory-efficient batch processing
 - Progress tracking with estimated times
 - Configurable model selection for speed/accuracy balance
 
-## Analysis Tools
-
-Compare detection results between runs:
-```bash
-python utils/analyze.py <json_file1> <json_file2>
-```
-
-Features:
-- Image-level comparisons
-- Building detection matching
-- Statistical analysis
-- Detailed debugging information
-
 ## Troubleshooting
 
 Common issues and solutions:
+
 - **GPU not detected**: Ensure CUDA toolkit is installed
 - **Memory errors**: Reduce batch size or use nano model
 - **Missing files**: Check input directory structure
