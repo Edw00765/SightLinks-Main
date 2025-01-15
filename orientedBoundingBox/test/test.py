@@ -20,24 +20,27 @@ def prediction(predictionThreshold=0.25, saved=False):
             if imagePath.endswith(('.png', '.jpg', '.jpeg')):
                 try:
                     allPointsList = []
+                    allConfidenceList = []
                     results = model(imagePath, save=saved, save_txt=saved, conf=predictionThreshold, iou=0.9, project="boundingBoxImages", name="run", exist_ok=True, verbose=False)  # predict on an image, to save an image, set save_txt to true and save to true. If want to override folders instead of creating new ones, set exist_ok to True
                     
                     for result in results:
                         #The xyxyxyxy contains the four edges in pixels, while the xyxyxyxyn contains the percentage
                         result = result.cpu()
+                        for confidence in result.obb.conf:
+                            allConfidenceList.append(confidence.item())
                         for boxes in result.obb.xyxyxyxy:
                             x1, y1 = boxes[0]
                             x2, y2 = boxes[1]
                             x3, y3 = boxes[2]
                             x4, y4 = boxes[3]
                             listOfPoints = georeferecePoints(x1,y1,x2,y2,x3,y3,x4,y4,imagePath)
-
                             longLatList = BNGtoLatLong(listOfPoints)
                             allPointsList.append(longLatList)
                     if allPointsList:
                         allOutput.append({
                             "image":image,
-                            "coordinates":allPointsList
+                            "coordinates":allPointsList,
+                            "confidence":allConfidenceList,
                         })
                     os.remove(imagePath)
                     os.remove(imagePath.replace('jpg', 'jgw'))
