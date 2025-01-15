@@ -1,0 +1,29 @@
+# Ignore Python cache
+__pycache__/
+.cache/
+*.pyc
+
+# Ignore log files
+*.log
+
+# Ignore output folder
+run/output/
+
+# Ignore cache folder
+.cache/
+
+# Ignore zip files and data
+*.zip
+*.jgw
+*.txt
+*.json
+*.png
+*.jpg
+*.jpeg
+
+# Ignore environment files
+.env
+
+# Ignore .DS_Store
+.DS_Store
+
