@@ -29,3 +29,5 @@ def execute(uploadDir = "input", inputType = "0", classificationThreshold = 0.35
     prediction(predictionThreshold, saveLabeledImage, outputType, outputFolder, yoloModelType)
     print(f"Output saved to {outputFolder} as {outputType}.")
     print(f"Total time taken: {time.time() - start_time:.2f} seconds")
+
+execute(inputType = "1")

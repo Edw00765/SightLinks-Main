@@ -1,7 +1,6 @@
 from PIL import Image
 from tqdm import tqdm
 import os
-import re
 import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -24,7 +23,7 @@ def boundBoxSegmentation(classificationThreshold=0.35, outputFolder = "run/outpu
                     chunksOfInterest = classificationSegmentation(imagePath, classificationThreshold)
                     
                     # Get original filename without extension
-                    base_name = os.path.splitext(inputFileName)[0]
+                    baseName = os.path.splitext(inputFileName)[0]
                     os.makedirs(outputFolder, exist_ok=True)
 
                     #data for georeferencing
@@ -54,11 +53,11 @@ def boundBoxSegmentation(classificationThreshold=0.35, outputFolder = "run/outpu
                         cropped = originalImage.crop(box)
                         
                         # Create output filenames using original name plus row and column
-                        output_image = f"{outputFolder}/{base_name}_r{row}_c{col}.jpg"
-                        output_jgw = f"{outputFolder}/{base_name}_r{row}_c{col}.jgw"
+                        outputImage = f"{outputFolder}/{baseName}_r{row}_c{col}.jpg"
+                        outputJGW = f"{outputFolder}/{baseName}_r{row}_c{col}.jgw"
                         
-                        cropped.save(output_image)
-                        with open(output_jgw, 'w') as file:
+                        cropped.save(outputImage)
+                        with open(outputJGW, 'w') as file:
                             file.write(f"{pixelSizeX:.10f}\n")
                             file.write(f"{rotationX:.10f}\n")
                             file.write(f"{rotationY:.10f}\n")

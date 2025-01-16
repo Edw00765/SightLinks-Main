@@ -23,6 +23,8 @@ run/output/
 # Ignore environment files
 .env
 
+venv
+
 # Ignore .DS_Store
 .DS_Store
 

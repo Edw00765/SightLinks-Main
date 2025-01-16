@@ -10,27 +10,27 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".
 from georeference.georeference import georeferecePoints
 from georeference.georeference import BNGtoLatLong
 
-def get_original_image_name(filename):
+def getOriginalImageName(filename):
     """Extract original image name from segmented filename"""
     # Remove row and column information (e.g., '_r1_c1')
     return re.sub(r'_r\d+_c\d+$', '', filename)
 
-def save_txt_output(outputFolder, image_name, coordinates):
+def saveTXTOutput(outputFolder, imageName, coordinates):
     """Save coordinates to a TXT file with one bounding box per line"""
-    txt_path = os.path.join(outputFolder, f"{image_name}.txt")
+    txtPath = os.path.join(outputFolder, f"{imageName}.txt")
     
-    with open(txt_path, 'w') as file:
-        for coord_set in coordinates:
+    with open(txtPath, 'w') as file:
+        for coordSet in coordinates:
             # Format each point as "lon,lat" and join with spaces
-            line = " ".join([f"{point[0]},{point[1]}" for point in coord_set])
+            line = " ".join([f"{point[0]},{point[1]}" for point in coordSet])
             file.write(line + "\n")
 
 def prediction(predictionThreshold=0.25, saveLabeledImage=False, outputType="0", outputFolder="run/output", modelType="n"):
     modelPath = f"models/yolo-{modelType}.pt"
     model = YOLO(modelPath)  # load an official model
     
-    # Dictionary to store all detections grouped by original image
-    image_detections = {}
+    # Dictionary to store all detections and their confidence grouped by original image
+    imageDetections = {}
     
     # First, process all images and group detections
     with tqdm(total=(len(os.listdir(outputFolder))//2), desc="Creating Oriented Bounding Box") as pbar:
@@ -41,11 +41,13 @@ def prediction(predictionThreshold=0.25, saveLabeledImage=False, outputType="0",
             imagePath = os.path.join(outputFolder, image)
             try:
                 allPointsList = []
+                allConfidenceList = []
                 results = model(imagePath, save=saveLabeledImage, conf=predictionThreshold, iou=0.9, 
                               project=outputFolder+"/labeledImages", name="run", exist_ok=True, verbose=False)
-                
                 for result in results:
                     result = result.cpu()
+                    for confidence in result.obb.conf:
+                        allConfidenceList.append(confidence.item())
                     for boxes in result.obb.xyxyxyxy:
                         x1, y1 = boxes[0]
                         x2, y2 = boxes[1]
@@ -57,12 +59,14 @@ def prediction(predictionThreshold=0.25, saveLabeledImage=False, outputType="0",
                 
                 if allPointsList:
                     # Get original image name
-                    original_image = get_original_image_name(os.path.splitext(image)[0])
+                    originalImage = getOriginalImageName(os.path.splitext(image)[0])
                     
                     # Add detections to the group
-                    if original_image not in image_detections:
-                        image_detections[original_image] = []
-                    image_detections[original_image].extend(allPointsList)
+                    if originalImage not in imageDetections:
+                        # Index 0 will contain the coordinates, while index 1 will contain it's confidence. They are related based on their index.
+                        imageDetections[originalImage] = [[],[]]
+                    imageDetections[originalImage][0].extend(allPointsList)
+                    imageDetections[originalImage][1].extend(allConfidenceList)
                 
                 os.remove(imagePath)
                 os.remove(imagePath.replace('jpg', 'jgw'))
@@ -73,21 +77,22 @@ def prediction(predictionThreshold=0.25, saveLabeledImage=False, outputType="0",
     # Now save the grouped detections
     if outputType == "0":
         # Save as JSON
-        json_output = []
-        for original_image, coordinates in image_detections.items():
-            json_output.append({
-                "image": f"{original_image}.jpg",
-                "coordinates": coordinates
+        jsonOutput = []
+        for originalImage, coordAndConf in imageDetections.items():
+            jsonOutput.append({
+                "image": f"{originalImage}.jpg",
+                "coordinates": coordAndConf[0],
+                "confidence": coordAndConf[1]
             })
         
-        json_path = os.path.join(outputFolder, "output.json")
-        with open(json_path, 'w') as file:
-            json.dump(json_output, file, indent=2)
-        print(f"\nJSON output saved to: {json_path}")
+        jsonPath = os.path.join(outputFolder, "output.json")
+        with open(jsonPath, 'w') as file:
+            json.dump(jsonOutput, file, indent=2)
+        print(f"\nJSON output saved to: {jsonPath}")
     else:
         # Save as TXT files
-        for original_image, coordinates in image_detections.items():
-            save_txt_output(outputFolder, original_image, coordinates)
+        for originalImage, coordAndConf in imageDetections.items():
+            saveTXTOutput(outputFolder, originalImage, coordAndConf[0], coordAndConf[1])
         print(f"\nTXT files saved to: {outputFolder}")
     
-    print(f"Processed {len(image_detections)} original images")
+    print(f"Processed {len(imageDetections)} original images")
