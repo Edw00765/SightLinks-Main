@@ -18,7 +18,7 @@ saveLabeledImage = False
 
 # outputType is used to determine the output format
 # 0 for JSON, 1 for TXT
-outputType = "0"
+outputType = "1"
 
 # yoloModelType is used to determine the yolo model type
 # 'n' for yolo11n-obb

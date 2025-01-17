@@ -15,14 +15,17 @@ def getOriginalImageName(filename):
     # Remove row and column information (e.g., '_r1_c1')
     return re.sub(r'_r\d+_c\d+$', '', filename)
 
-def saveTXTOutput(outputFolder, imageName, coordinates):
-    """Save coordinates to a TXT file with one bounding box per line"""
+def saveTXTOutput(outputFolder, imageName, coordinates, confidences=None):
+    """Save coordinates and optional confidence scores to a TXT file with one bounding box per line"""
     txtPath = os.path.join(outputFolder, f"{imageName}.txt")
     
     with open(txtPath, 'w') as file:
-        for coordSet in coordinates:
+        for i, coordSet in enumerate(coordinates):
             # Format each point as "lon,lat" and join with spaces
             line = " ".join([f"{point[0]},{point[1]}" for point in coordSet])
+            # Add confidence score if available
+            if confidences is not None and i < len(confidences):
+                line += f" {confidences[i]}"
             file.write(line + "\n")
 
 def prediction(predictionThreshold=0.25, saveLabeledImage=False, outputType="0", outputFolder="run/output", modelType="n"):
