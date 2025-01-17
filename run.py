@@ -28,6 +28,9 @@ outputType = "0"
 # 'x' for yolo11x-obb
 yoloModelType = 'n'
 
+# cleanup is if we want to clean up the extract directory
+cleanup = True
+
 if __name__ == "__main__":
     execute(uploadDir, 
             inputType, 
@@ -35,4 +38,5 @@ if __name__ == "__main__":
             predictionThreshold, 
             saveLabeledImage, 
             outputType, 
-            yoloModelType)
+            yoloModelType,
+            cleanup)
