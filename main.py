@@ -1,5 +1,5 @@
-from imageSegmentation.boundBoxSegmentation import boundBoxSegmentation
-from orientedBoundingBox.predictOBB import prediction
+from imageSegmentation.boundBoxSegmentation import boundBoxSegmentationJGW, boundBoxSegmentationTIF
+from orientedBoundingBox.predictOBB import predictionJGW, predictionTIF
 from utils.extract import extract_files
 from datetime import datetime
 import os
@@ -21,15 +21,31 @@ def create_dir(run_dir):
     return output_dir
 
 def execute(uploadDir = "input", inputType = "0", classificationThreshold = 0.35, predictionThreshold = 0.5, saveLabeledImage = False, outputType = "0", yoloModelType = "n", cleanup=True):
-    start_time = time.time()
-    outputFolder = create_dir("run/output")
-    extractDir = create_dir("run/extract")
-    # Extract files if needed
-    extract_files(inputType, uploadDir, extractDir)
-    # Run segmentation and prediction
-    boundBoxSegmentation(classificationThreshold, outputFolder, extractDir)
-    prediction(predictionThreshold, saveLabeledImage, outputType, outputFolder, yoloModelType)
-    print(f"Output saved to {outputFolder} as {outputType}.")
-    print(f"Total time taken: {time.time() - start_time:.2f} seconds")
-    if cleanup:
-        clean_up(extractDir)
+    if inputType == "0" or inputType == "1":
+        start_time = time.time()
+        outputFolder = create_dir("run/output")
+        extractDir = create_dir("run/extract")
+        # Extract files if needed
+        extract_files(inputType, uploadDir, extractDir)
+        # Run segmentation and prediction
+        boundBoxSegmentationJGW(classificationThreshold, outputFolder, extractDir)
+        predictionJGW(predictionThreshold, saveLabeledImage, outputType, outputFolder, yoloModelType)
+        print(f"Output saved to {outputFolder} as {outputType}.")
+        print(f"Total time taken: {time.time() - start_time:.2f} seconds")
+        if cleanup:
+            clean_up(extractDir)
+    else:
+        start_time = time.time()
+        outputFolder = create_dir("run/output")
+        extractDir = create_dir("run/extract")
+        # Extract files if needed
+        extract_files(inputType, uploadDir, extractDir)
+        # Run segmentation and prediction
+        boundBoxSegmentationTIF(classificationThreshold, outputFolder, extractDir)
+        predictionTIF(predictionThreshold, saveLabeledImage, outputType, outputFolder, yoloModelType)
+        print(f"Output saved to {outputFolder} as {outputType}.")
+        print(f"Total time taken: {time.time() - start_time:.2f} seconds")
+        if cleanup:
+            clean_up(extractDir)
+
+execute(inputType="2", cleanup=False)

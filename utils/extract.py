@@ -1,7 +1,15 @@
 import os
 import zipfile
 import shutil
+import sys
 from tqdm import tqdm
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from imageSegmentation.tifResize import get_pixel_count, tile_resize
+
+
+# Chunk size for TIF images that are too large, we can also set this to 1024
+newTifSize = 4000
 
 def extract_files(input_type, upload_dir, extract_dir):
     """
@@ -58,7 +66,7 @@ def extract_files(input_type, upload_dir, extract_dir):
                 
                 # Clean up temporary directory
                 shutil.rmtree(temp_dir)
-    else:
+    elif input_type == "1":
         # Custom data - check for zip files first
         files_to_process = []
         
@@ -96,6 +104,53 @@ def extract_files(input_type, upload_dir, extract_dir):
                         shutil.copy2(src_path, dst_path)
                         if file not in extracted_files:
                             extracted_files.add(file)
+                pbar.update(1)
+
+    elif input_type == "2":
+        extracted_files = set()
+
+    # Process files with progress bar
+        with tqdm(total=len(files), desc="Processing files") as pbar:
+            for file in [f for f in files if f.endswith('.zip') or f.endswith('.tif')]:
+                if file.endswith('.zip'):
+                    # Process zip file
+                    zip_path = os.path.join(upload_dir, file)
+                    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                        temp_dir = 'temp_extract'
+                        zip_ref.extractall(temp_dir)
+
+                        # Add extracted files to processing list
+                        files_to_process = []
+                        for root, _, extracted in os.walk(temp_dir):
+                            for filename in extracted:
+                                if not filename.startswith('._'):
+                                    files_to_process.append((root, filename))
+
+                        # Process extracted files
+                        for root, filename in files_to_process:
+                            src_path = os.path.join(root, filename)
+                            dst_path = os.path.join(extract_dir, filename)
+                            shutil.copy2(src_path, dst_path)
+                            if filename not in extracted_files:
+                                extracted_files.add(filename)
+
+                        # Clean up temporary directory
+                        shutil.rmtree(temp_dir)
+                elif file.endswith('.tif'):
+                    src_path = os.path.join(upload_dir, file)
+                    dst_path = os.path.join(extract_dir, file)
+                    shutil.copy2(src_path, dst_path)
+                    if file not in extracted_files:
+                        extracted_files.add(file)
+                
+                # Check pixel count and apply tile_resize if necessary
+                image_path = os.path.join(extract_dir, file)
+                pixel_count = get_pixel_count(image_path)
+
+                if pixel_count > 180000000:
+                    print(f"Image {file} has {pixel_count} pixels, applying tile resize...")
+                    tile_resize(file, extract_dir, tile_width=newTifSize, tile_height=newTifSize)
+                
                 pbar.update(1)
     
     print("\nProcessed files:")
