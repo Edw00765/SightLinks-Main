@@ -76,7 +76,6 @@ def boundBoxSegmentationJGW(classificationThreshold=0.35, outputFolder = "run/ou
 def boundBoxSegmentationTIF(classificationThreshold=0.35, outputFolder = "run/output", extractDir = "run/extract"):
     os.environ["GDAL_DISABLE_READDIR_ON_OPEN"] = "YES"
     gdal.SetConfigOption("GDAL_MAX_IMAGE_PIXELS", "100000000000")
-    print("GDAL_MAX_IMAGE_PIXELS:", gdal.GetConfigOption("GDAL_MAX_IMAGE_PIXELS"))
     with tqdm(total=(len(os.listdir(extractDir))), desc="Segmenting Images") as pbar:
         for inputFileName in os.listdir(extractDir):
                 if inputFileName.endswith(('.tif')):
@@ -133,7 +132,3 @@ def boundBoxSegmentationTIF(classificationThreshold=0.35, outputFolder = "run/ou
                             pbar.update(1)
                     except Exception as e:
                         print(f"Error opening {imagePath}: {e}")
-
-
-
-boundBoxSegmentationTIF()
