@@ -21,7 +21,7 @@ warnings.filterwarnings(
 
 vgg16_state_path = "models/VGG16_Full_State_Dict.pth"
 # A prototype v2 version that's only been trained on 2000 images by transfer learning
-mobileNet_path = "models/MobileNetV3_state_dict_big_train.pth"
+mobileNet_path = "models/mn3_vs55.pth"
 data_path = "classificationScreening/classification_data"
 
 classify = None
@@ -78,7 +78,6 @@ def load_mobileNet_classifier(state_dict_path):
 classify = load_mobileNet_classifier(mobileNet_path)
 transform = classUtils.vgg_transform
 
-
 # Expects a numpy array image
 def infer(image, infer_model=classify, infer_transform=transform):
     # If infer model and transform have not been initialised
@@ -91,9 +90,9 @@ def infer(image, infer_model=classify, infer_transform=transform):
     if len(image.shape) <= 3:
         image = image.unsqueeze(0)
 
-    logit_pred = infer_model(image)
-
-    probs = 1 / (1 + np.exp(-logit_pred.detach().numpy()))
+    
+    pred = torch.sigmoid(infer_model(image))
+    probs = pred.detach().numpy()
     # prob = max(0, min(np.exp(logit_pred.detach().numpy())[0], 1))
     return probs
 
