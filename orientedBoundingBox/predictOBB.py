@@ -4,9 +4,7 @@ from osgeo import gdal, osr
 from PIL import Image
 from tqdm import tqdm
 import os
-import json
 import sys
-import re
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from georeference.georeference import georeferenceTIF, georefereceJGW, BNGtoLatLong
@@ -55,10 +53,9 @@ def predictionJGW(imageAndDatas, predictionThreshold=0.25, saveLabeledImage=Fals
                             imageDetections[baseName] = [[],[]]
                         imageDetections[baseName][0].extend(allPointsList)
                         imageDetections[baseName][1].extend(allConfidenceList)
-                pbar.update(1)
             except Exception as e:
                 print(f"Error processing {croppedImage}: {e}")
-                pbar.update(1)
+            pbar.update(1)
     return imageDetections
 
 
@@ -103,7 +100,7 @@ def predictionTIF(imageAndDatas, predictionThreshold=0.25, saveLabeledImage=Fals
                         imageDetections[baseName] = [[],[]]
                     imageDetections[baseName][0].extend(allPointsList)
                     imageDetections[baseName][1].extend(allConfidenceList)
-                pbar.update(1)
             except Exception as e:
                 print(f"Error processing {baseName}: {e}")
+            pbar.update(1)
     return imageDetections

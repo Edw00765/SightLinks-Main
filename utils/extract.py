@@ -7,10 +7,6 @@ from tqdm import tqdm
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 # from imageSegmentation.tifResize import get_pixel_count, tile_resize
 
-
-# Chunk size for TIF images that are too large, we can also set this to 1024
-newTifSize = 4000
-
 def extract_files(input_type, upload_dir, extract_dir):
     """
     Extract or move files to the target directory based on input type

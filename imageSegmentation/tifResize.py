@@ -2,6 +2,9 @@ from osgeo import gdal
 from PIL import Image
 import os
 
+
+#################################################################
+#I think this file is no longer needed as now it is behaving as expected.
 def tile_resize(input_file, outputFolder, tile_width, tile_height):
     # Check if the file is accessible
     print(f"The file {input_file} is too large, segmenting it to smaller images.")

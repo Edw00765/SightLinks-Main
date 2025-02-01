@@ -57,4 +57,4 @@ def execute(uploadDir = "input", inputType = "0", classificationThreshold = 0.35
         if cleanup:
             clean_up(extractDir)
 
-execute(inputType="2", cleanup=False, saveLabeledImage=True)
+execute(inputType="2", cleanup=False)

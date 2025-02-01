@@ -54,12 +54,10 @@ def boundBoxSegmentationJGW(classificationThreshold=0.35, extractDir = "run/extr
                         
                         topLeftXGeoInterest = topLeftXGeo + topX * pixelSizeX
                         topLeftYGeoInterest = topLeftYGeo + topY * pixelSizeY
-                        
-                        imageAndDatas.append((inputFileName, cropped, pixelSizeX, pixelSizeY, topLeftXGeoInterest, topLeftYGeoInterest))
-                    pbar.update(1)    
+                        imageAndDatas.append((inputFileName, cropped, pixelSizeX, pixelSizeY, topLeftXGeoInterest, topLeftYGeoInterest)) 
                 except Exception as e:
                     print(f"Error opening {imagePath}: {e}")
-                    pbar.update(1)
+            pbar.update(1)
         return imageAndDatas
 
 
@@ -111,8 +109,7 @@ def boundBoxSegmentationTIF(classificationThreshold=0.35, extractDir = "run/extr
                                     projWin=[georeferencedTopX, georeferencedTopY, geoTransform[0] + (topX + boundBoxChunkSize) * geoTransform[1], geoTransform[3] + (topY + boundBoxChunkSize) * geoTransform[5]], 
                                     format="MEM")
                         imageAndDatas.append((inputFileName, boundBoxInputImage))
-                    pbar.update(1)
                 except Exception as e:
                     print(f"Error opening {imagePath}: {e}")
-                    pbar.update(1)
+            pbar.update(1)
         return imageAndDatas
