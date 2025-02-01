@@ -3,10 +3,6 @@ from PIL import Image
 import os
 
 def tile_resize(input_file, outputFolder, tile_width, tile_height):
-    # Configure GDAL to allow handling of large images
-    os.environ["GDAL_DISABLE_READDIR_ON_OPEN"] = "YES"
-    gdal.SetConfigOption("GDAL_MAX_IMAGE_PIXELS", "10000000000")  # Increase pixel limit
-
     # Check if the file is accessible
     print(f"The file {input_file} is too large, segmenting it to smaller images.")
     baseName = os.path.splitext(input_file)[0]

@@ -5,7 +5,7 @@ import sys
 from tqdm import tqdm
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from imageSegmentation.tifResize import get_pixel_count, tile_resize
+# from imageSegmentation.tifResize import get_pixel_count, tile_resize
 
 
 # Chunk size for TIF images that are too large, we can also set this to 1024
@@ -104,7 +104,7 @@ def extract_files(input_type, upload_dir, extract_dir):
                         shutil.copy2(src_path, dst_path)
                         if file not in extracted_files:
                             extracted_files.add(file)
-                pbar.update(1)
+            pbar.update(1)
 
     elif input_type == "2":
         extracted_files = set()
@@ -143,15 +143,8 @@ def extract_files(input_type, upload_dir, extract_dir):
                     if file not in extracted_files:
                         extracted_files.add(file)
                 
-                # Check pixel count and apply tile_resize if necessary
-                image_path = os.path.join(extract_dir, file)
-                pixel_count = get_pixel_count(image_path)
-
-                if pixel_count > 180000000:
-                    print(f"Image {file} has {pixel_count} pixels, applying tile resize...")
-                    tile_resize(file, extract_dir, tile_width=newTifSize, tile_height=newTifSize)
-                
-                pbar.update(1)
+                # Check pixel count and apply tile_resize if necessary        
+            pbar.update(1)
     
     print("\nProcessed files:")
     for filename in sorted(extracted_files):

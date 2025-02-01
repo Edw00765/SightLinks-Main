@@ -1,26 +1,17 @@
 from pyproj import Transformer
 from osgeo import gdal, osr
 
-def georefereceJGW(x1,y1,x2,y2,x3,y3,x4,y4,imagePath):
-    try:
-        with open(imagePath.replace('jpg', 'jgw'), 'r') as jgwFile:
-            lines = jgwFile.readlines()
-        pixelSizeX = float(lines[0].strip())
-        pixelSizeY = float(lines[3].strip())
-        topLeftXGeo = float(lines[4].strip())
-        topLeftYGeo = float(lines[5].strip())
-        x1 = topLeftXGeo + pixelSizeX * x1
-        y1 = topLeftYGeo + pixelSizeY * y1
-        x2 = topLeftXGeo + pixelSizeX * x2
-        y2 = topLeftYGeo + pixelSizeY * y2
-        x3 = topLeftXGeo + pixelSizeX * x3
-        y3 = topLeftYGeo + pixelSizeY * y3
-        x4 = topLeftXGeo + pixelSizeX * x4
-        y4 = topLeftYGeo + pixelSizeY * y4
-        return([(x1,y1),(x2,y2),(x3,y3),(x4,y4)])
-    except Exception as e:
-        print(f"There was an issue with opening {imagePath.replace('jpg', 'jgw')}: {e}")
-        return(None)
+def georefereceJGW(x1,y1,x2,y2,x3,y3,x4,y4,pixelSizeX,pixelSizeY,topLeftXGeo,topLeftYGeo):
+    x1 = topLeftXGeo + pixelSizeX * x1
+    y1 = topLeftYGeo + pixelSizeY * y1
+    x2 = topLeftXGeo + pixelSizeX * x2
+    y2 = topLeftYGeo + pixelSizeY * y2
+    x3 = topLeftXGeo + pixelSizeX * x3
+    y3 = topLeftYGeo + pixelSizeY * y3
+    x4 = topLeftXGeo + pixelSizeX * x4
+    y4 = topLeftYGeo + pixelSizeY * y4
+    return([(x1,y1),(x2,y2),(x3,y3),(x4,y4)])
+
 
 def BNGtoLatLong(listOfPoints):
     transformer = Transformer.from_crs("EPSG:27700", "EPSG:4326", always_xy=True)
@@ -32,17 +23,11 @@ def BNGtoLatLong(listOfPoints):
 
 
 
-def georeferenceTIF(tif_file, x1,y1,x2,y2,x3,y3,x4,y4):
-    # Open the GeoTIFF file
-    dataset = gdal.Open(tif_file)
-    if not dataset:
-        raise FileNotFoundError(f"Failed to open file: {tif_file}")
-
-    # Get GeoTransform and Projection
-    geotransform = dataset.GetGeoTransform()
+def georeferenceTIF(croppedTifImage, x1,y1,x2,y2,x3,y3,x4,y4):
+    geotransform = croppedTifImage.GetGeoTransform()
     if not geotransform:
-        raise ValueError("No geotransform found in the file.")
-    projection = dataset.GetProjection()
+        raise ValueError(f"No geotransform found in the file: {croppedTifImage}")
+    projection = croppedTifImage.GetProjection()
 
     # Convert pixel coordinates to real-world coordinates in the file's CRS
     origin_x = geotransform[0]
@@ -77,8 +62,5 @@ def georeferenceTIF(tif_file, x1,y1,x2,y2,x3,y3,x4,y4):
     outputList.append((lat2, lon2))
     outputList.append((lat3, lon3))
     outputList.append((lat4, lon4))
-
-    # Clean up
-    dataset = None
 
     return outputList

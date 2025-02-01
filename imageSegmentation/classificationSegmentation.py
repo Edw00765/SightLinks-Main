@@ -6,25 +6,23 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from classificationScreening.classify import PIL_infer
 
-def classificationSegmentation(inputFileName, classificationThreshold):
+def classificationSegmentation(inputFileName, classificationThreshold, classificationChunkSize):
     image = Image.open(inputFileName)
     width, height = image.size
-    #Classification required size
-    chunkSize = 256
     listOfRowColumn = []
     # Loop to create and save chunks
-    for row in range(0, height, chunkSize):
-        for col in range(0, width, chunkSize):
+    for row in range(0, height, classificationChunkSize):
+        for col in range(0, width, classificationChunkSize):
             xDifference = 0
             yDifference = 0
-            if col + chunkSize > width:
-                xDifference = col + chunkSize - width
-            if row + chunkSize > height:
-                yDifference = row + chunkSize - height
-            box = (col - xDifference, row - yDifference, col - xDifference + chunkSize, row - yDifference + chunkSize)
+            if col + classificationChunkSize > width:
+                xDifference = col + classificationChunkSize - width
+            if row + classificationChunkSize > height:
+                yDifference = row + classificationChunkSize - height
+            box = (col - xDifference, row - yDifference, col - xDifference + classificationChunkSize, row - yDifference + classificationChunkSize)
             cropped = image.crop(box)
             containsCrossing = PIL_infer(cropped, threshold=classificationThreshold)
             if containsCrossing:
-                listOfRowColumn.append((row // chunkSize, col // chunkSize))
+                listOfRowColumn.append((row // classificationChunkSize, col // classificationChunkSize))
 
     return listOfRowColumn
