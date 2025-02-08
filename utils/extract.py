@@ -100,14 +100,14 @@ def extract_files(input_type, upload_dir, extract_dir):
                         shutil.copy2(src_path, dst_path)
                         if file not in extracted_files:
                             extracted_files.add(file)
-            pbar.update(1)
+                pbar.update(1)
 
     elif input_type == "2":
         extracted_files = set()
 
     # Process files with progress bar
         with tqdm(total=len(files), desc="Processing files") as pbar:
-            for file in [f for f in files if f.endswith('.zip') or f.endswith('.tif')]:
+            for file in files:
                 if file.endswith('.zip'):
                     # Process zip file
                     zip_path = os.path.join(upload_dir, file)
@@ -140,7 +140,7 @@ def extract_files(input_type, upload_dir, extract_dir):
                         extracted_files.add(file)
                 
                 # Check pixel count and apply tile_resize if necessary        
-            pbar.update(1)
+                pbar.update(1)
     
     print("\nProcessed files:")
     for filename in sorted(extracted_files):

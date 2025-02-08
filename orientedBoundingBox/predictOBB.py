@@ -28,14 +28,18 @@ def predictionJGW(imageAndDatas, predictionThreshold=0.25, saveLabeledImage=Fals
     
     # Dictionary to store all detections and their confidence grouped by original image
     imageDetections = {}
+    numOfSavedImages = 0
     # First, process all images and group detections
     with tqdm(total=(len(imageAndDatas)), desc="Creating Oriented Bounding Box") as pbar:
         for baseName, croppedImage, pixelSizeX, pixelSizeY, topLeftXGeo, topLeftYGeo in imageAndDatas:
             try:
                 allPointsList = []
                 allConfidenceList = []
-                results = model(croppedImage, save=saveLabeledImage, conf=predictionThreshold, iou=0.9, 
+                results = model(croppedImage, save=saveLabeledImage, conf=predictionThreshold, iou=0.01, 
                             project=outputFolder+"/labeledImages", name="run", exist_ok=True, verbose=False)
+                if saveLabeledImage and os.path.exists(outputFolder+"/labeledImages/run/image0.jpg"):
+                    os.rename(outputFolder+"/labeledImages/run/image0.jpg", outputFolder+f"/labeledImages/run/image{numOfSavedImages}.jpg")
+                    numOfSavedImages += 1
                 for result in results:
                     result = result.cpu()
                     for confidence in result.obb.conf:
@@ -65,6 +69,7 @@ def predictionTIF(imageAndDatas, predictionThreshold=0.25, saveLabeledImage=Fals
     model = YOLO(modelPath)  # load an official model
     # Dictionary to store all detections and their confidence grouped by original image
     imageDetections = {}
+    numOfSavedImages = 0
     # First, process all images and group detections
     with tqdm(total=(len(imageAndDatas)), desc="Creating Oriented Bounding Box") as pbar:
         for baseName, croppedImage in imageAndDatas:
@@ -81,7 +86,9 @@ def predictionTIF(imageAndDatas, predictionThreshold=0.25, saveLabeledImage=Fals
                 PILImage = Image.fromarray(croppedImageArray)
                 results = model(PILImage, save=saveLabeledImage, conf=predictionThreshold, iou=0.9, 
                               project=outputFolder+"/labeledImages", name="run", exist_ok=True, verbose=False)
-                
+                if saveLabeledImage and os.path.exists(outputFolder+"/labeledImages/run/image0.jpg"):
+                    os.rename(outputFolder+"/labeledImages/run/image0.jpg", outputFolder+f"/labeledImages/run/image{numOfSavedImages}.jpg")
+                    numOfSavedImages += 1
                 for result in results:
                     result = result.cpu()
                     for confidence in result.obb.conf:
