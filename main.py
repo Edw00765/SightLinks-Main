@@ -40,8 +40,9 @@ def execute(uploadDir = "input", inputType = "0", classificationThreshold = 0.35
         extract_files(inputType, uploadDir, extractDir)
         # Run segmentation and prediction
         croppedImagesAndData = boundBoxSegmentationJGW(classificationThreshold, extractDir)
-        imageAndDatas = predictionJGW(croppedImagesAndData, predictionThreshold, saveLabeledImage, outputFolder, yoloModelType, inputType)
-        saveToOutput(outputType=outputType, outputFolder=outputFolder, imageDetections=imageAndDatas)
+        imageDetections = predictionJGW(croppedImagesAndData, predictionThreshold, saveLabeledImage, outputFolder, yoloModelType, inputType)
+        removeDuplicateBoxes(imageDetections=imageDetections)
+        saveToOutput(outputType=outputType, outputFolder=outputFolder, imageDetections=imageDetections)
         print(f"Output saved to {outputFolder} as {outputType}.")
         print(f"Total time taken: {time.time() - start_time:.2f} seconds")
         if cleanup:
@@ -54,9 +55,9 @@ def execute(uploadDir = "input", inputType = "0", classificationThreshold = 0.35
         extract_files(inputType, uploadDir, extractDir)
         # Run segmentation and prediction
         croppedImagesAndData = boundBoxSegmentationTIF(classificationThreshold, extractDir)
-        imageAndDatas = predictionTIF(imageAndDatas=croppedImagesAndData, predictionThreshold=predictionThreshold, saveLabeledImage=saveLabeledImage, outputFolder=outputFolder, modelType=yoloModelType)
-        removeDuplicateBoxes(imageAndDatas)
-        saveToOutput(outputType=outputType, outputFolder=outputFolder, imageDetections=imageAndDatas)
+        imageDetections = predictionTIF(imageAndDatas=croppedImagesAndData, predictionThreshold=predictionThreshold, saveLabeledImage=saveLabeledImage, outputFolder=outputFolder, modelType=yoloModelType)
+        removeDuplicateBoxes(imageDetections=imageDetections)
+        saveToOutput(outputType=outputType, outputFolder=outputFolder, imageDetections=imageDetections)
         print(f"Output saved to {outputFolder} as {outputType}.")
         print(f"Total time taken: {time.time() - start_time:.2f} seconds")
         if cleanup:

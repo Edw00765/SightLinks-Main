@@ -95,14 +95,14 @@ def boundBoxSegmentationTIF(classificationThreshold=0.35, extractDir = "run/extr
                         georeferencedTopY = geoTransform[3] + topX * geoTransform[4] + topY * geoTransform[5]
                         
                         # Use GDAL to create the cropped image, preserving georeference
-                        # imageChunk = f"{inputFileName}{(topX, topY, boundBoxChunkSize)}"
-                        # if imageChunk in chunkSeen:
-                        #     continue
-                        # chunkSeen.add(imageChunk)
+                        imageChunk = f"{inputFileName}{(topX, topY, boundBoxChunkSize)}"
+                        if imageChunk in chunkSeen:
+                            continue
+                        chunkSeen.add(imageChunk)
                         boundBoxInputImage = gdal.Translate("", dataset, srcWin=[topX, topY, boundBoxChunkSize, boundBoxChunkSize], 
                                     projWin=[georeferencedTopX, georeferencedTopY, geoTransform[0] + (topX + boundBoxChunkSize) * geoTransform[1], geoTransform[3] + (topY + boundBoxChunkSize) * geoTransform[5]], 
                                     format="MEM")
-                        imageAndDatas.append((inputFileName, boundBoxInputImage, (row, col)))
+                        imageAndDatas.append((inputFileName, boundBoxInputImage, row, col))
                 except Exception as e:
                     print(f"Error opening {imagePath}: {e}")
             pbar.update(1)
