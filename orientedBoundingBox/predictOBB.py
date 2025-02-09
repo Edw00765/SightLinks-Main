@@ -9,23 +9,11 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from georeference.georeference import georeferenceTIF, georefereceJGW, BNGtoLatLong
 
-def saveTXTOutput(outputFolder, imageName, coordinates, confidences=None):
-    """Save coordinates and optional confidence scores to a TXT file with one bounding box per line"""
-    txtPath = os.path.join(outputFolder, f"{imageName}.txt")
-    
-    with open(txtPath, 'w') as file:
-        for i, coordSet in enumerate(coordinates):
-            # Format each point as "lon,lat" and join with spaces
-            line = " ".join([f"{point[0]},{point[1]}" for point in coordSet])
-            # Add confidence score if available
-            if confidences is not None and i < len(confidences):
-                line += f" {confidences[i]}"
-            file.write(line + "\n")
+#We could combine these two functions into one, but would that be more difficult for future debugging?
 
 def predictionJGW(imageAndDatas, predictionThreshold=0.25, saveLabeledImage=False, outputFolder="run/output", modelType="n"):
     modelPath = f"models/yolo-{modelType}.pt"
     model = YOLO(modelPath)  # load an official model
-    
     # Dictionary to store all detections and their confidence grouped by original image
     imageDetections = {}
     numOfSavedImages = 0
@@ -69,17 +57,14 @@ def predictionTIF(imageAndDatas, predictionThreshold=0.25, saveLabeledImage=Fals
     model = YOLO(modelPath)  # load an official model
     # Dictionary to store all detections and their confidence grouped by original image
     imageDetections = {}
-    numOfSavedImages = 0
+    imageDetectionsRowColumn = {}
+    numOfSavedImages = 1
     # First, process all images and group detections
     with tqdm(total=(len(imageAndDatas)), desc="Creating Oriented Bounding Box") as pbar:
-        for baseName, croppedImage in imageAndDatas:
+        for baseName, croppedImage, rowAndCol in imageAndDatas:
             try:
                 allPointsList = []
                 allConfidenceList = []
-
-                #########################################################################################
-                #There is a potential for big improvements here, but currently we have to convert to numpy, then PIL as the model does not support numpy array for some reason
-                #This also does not save the images properly now, since now the file in memory does not have a specific name, therefore overriding the same name over and over again
                 croppedImageArray = croppedImage.ReadAsArray()
                 if croppedImageArray.ndim == 3:
                     croppedImageArray = np.moveaxis(croppedImageArray, 0, -1)
@@ -101,9 +86,13 @@ def predictionTIF(imageAndDatas, predictionThreshold=0.25, saveLabeledImage=Fals
                         longLatList = georeferenceTIF(croppedImage,x1,y1,x2,y2,x3,y3,x4,y4)
                         allPointsList.append(longLatList)
                 
-                if allPointsList:
+                # if allPointsList:
+                #     row, col = rowAndCol
+                #     baseNameWithRowCol = baseName + "_r" + row + "_c" + col
+                #     imageDetectionsRowColumn[baseNameWithRowCol] = [[allPointsList],[allConfidenceList]]
+                    
+
                     if baseName not in imageDetections:
-                        # Index 0 will contain the coordinates, while index 1 will contain it's confidence. They are related based on their index.
                         imageDetections[baseName] = [[],[]]
                     imageDetections[baseName][0].extend(allPointsList)
                     imageDetections[baseName][1].extend(allConfidenceList)

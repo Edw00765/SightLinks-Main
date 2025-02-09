@@ -1,7 +1,9 @@
 from imageSegmentation.boundBoxSegmentation import boundBoxSegmentationJGW, boundBoxSegmentationTIF
+from imageSegmentation.tifResize import tile_resize
 from orientedBoundingBox.predictOBB import predictionJGW, predictionTIF
 from utils.extract import extract_files
 from utils.saveToOutput import saveToOutput
+from utils.filterOutput import removeDuplicateBoxes
 from datetime import datetime
 from PIL import Image
 from osgeo import gdal
@@ -27,6 +29,8 @@ def create_dir(run_dir):
     print(f"Output directory created: {output_dir}")
     return output_dir
 
+
+
 def execute(uploadDir = "input", inputType = "0", classificationThreshold = 0.35, predictionThreshold = 0.5, saveLabeledImage = False, outputType = "0", yoloModelType = "n", cleanup=True):
     if inputType == "0" or inputType == "1":
         start_time = time.time()
@@ -36,7 +40,7 @@ def execute(uploadDir = "input", inputType = "0", classificationThreshold = 0.35
         extract_files(inputType, uploadDir, extractDir)
         # Run segmentation and prediction
         croppedImagesAndData = boundBoxSegmentationJGW(classificationThreshold, extractDir)
-        imageAndDatas = predictionJGW(croppedImagesAndData, predictionThreshold, saveLabeledImage, outputFolder, yoloModelType)
+        imageAndDatas = predictionJGW(croppedImagesAndData, predictionThreshold, saveLabeledImage, outputFolder, yoloModelType, inputType)
         saveToOutput(outputType=outputType, outputFolder=outputFolder, imageDetections=imageAndDatas)
         print(f"Output saved to {outputFolder} as {outputType}.")
         print(f"Total time taken: {time.time() - start_time:.2f} seconds")
@@ -51,6 +55,7 @@ def execute(uploadDir = "input", inputType = "0", classificationThreshold = 0.35
         # Run segmentation and prediction
         croppedImagesAndData = boundBoxSegmentationTIF(classificationThreshold, extractDir)
         imageAndDatas = predictionTIF(imageAndDatas=croppedImagesAndData, predictionThreshold=predictionThreshold, saveLabeledImage=saveLabeledImage, outputFolder=outputFolder, modelType=yoloModelType)
+        removeDuplicateBoxes(imageAndDatas)
         saveToOutput(outputType=outputType, outputFolder=outputFolder, imageDetections=imageAndDatas)
         print(f"Output saved to {outputFolder} as {outputType}.")
         print(f"Total time taken: {time.time() - start_time:.2f} seconds")

@@ -73,7 +73,6 @@ def boundBoxSegmentationTIF(classificationThreshold=0.35, extractDir = "run/extr
                     if dataset is None:
                         raise Exception(f"Failed to open {imagePath}")
                     
-                    # Get the image dimensions
                     width = dataset.RasterXSize
                     height = dataset.RasterYSize
                     # Get the georeference data (this will be used to preserve georeferencing)
@@ -81,17 +80,12 @@ def boundBoxSegmentationTIF(classificationThreshold=0.35, extractDir = "run/extr
                     chunksOfInterest = classificationSegmentation(inputFileName=imagePath, classificationThreshold=classificationThreshold, classificationChunkSize=classificationChunkSize)
                     # Get original filename without extension
 
-                    # baseName = os.path.splitext(inputFileName)[0]
-                    inputFileName = inputFileName
-                    #############################################################################################################################
-                    #At some point, we will need to place a filtering method which skips crossings that have been seen, i think the chunkSeen is too inefficient in removing the same area
-                    #I think we can update the way we do classification segmentation, maybe we can the chunks that will already be "seen"?
                     for row, col in chunksOfInterest:
                         topRow = row - 1
                         topCol = col - 1
                         topX = topCol * classificationChunkSize - classificationChunkSize / 2 if topCol > 0 else 0  # Top left x
                         topY = topRow * classificationChunkSize - classificationChunkSize / 2 if topRow > 0 else 0  # Top left y
-                        # Handle overlap cases at the edges of the image
+                        
                         if topX + boundBoxChunkSize > width:
                             topX = width - boundBoxChunkSize
                         if topY + boundBoxChunkSize > height:
@@ -101,14 +95,14 @@ def boundBoxSegmentationTIF(classificationThreshold=0.35, extractDir = "run/extr
                         georeferencedTopY = geoTransform[3] + topX * geoTransform[4] + topY * geoTransform[5]
                         
                         # Use GDAL to create the cropped image, preserving georeference
-                        imageChunk = f"{inputFileName}{(topX, topY, boundBoxChunkSize)}"
-                        if imageChunk in chunkSeen:
-                            continue
-                        chunkSeen.add(imageChunk)
+                        # imageChunk = f"{inputFileName}{(topX, topY, boundBoxChunkSize)}"
+                        # if imageChunk in chunkSeen:
+                        #     continue
+                        # chunkSeen.add(imageChunk)
                         boundBoxInputImage = gdal.Translate("", dataset, srcWin=[topX, topY, boundBoxChunkSize, boundBoxChunkSize], 
                                     projWin=[georeferencedTopX, georeferencedTopY, geoTransform[0] + (topX + boundBoxChunkSize) * geoTransform[1], geoTransform[3] + (topY + boundBoxChunkSize) * geoTransform[5]], 
                                     format="MEM")
-                        imageAndDatas.append((inputFileName, boundBoxInputImage))
+                        imageAndDatas.append((inputFileName, boundBoxInputImage, (row, col)))
                 except Exception as e:
                     print(f"Error opening {imagePath}: {e}")
             pbar.update(1)
