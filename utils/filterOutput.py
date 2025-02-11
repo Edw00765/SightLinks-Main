@@ -1,149 +1,104 @@
 import math
 from itertools import combinations
 import re
-
-#To find the radius, I chose to use an eucliean approximation as it is alot faster than other methods like vincenty's formula
-
-def isWithinRadius(lat1, lon1, lat2, lon2, radius=1.5):
-    R = 6371000  # Earth radius in meters
-
-    # Convert degrees to radians
-    lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
-
-    # Compute deltas
-    delta_x = (lon2 - lon1) * math.cos((lat1 + lat2) / 2) * R
-    delta_y = (lat2 - lat1) * R
-
-    # Compute distance
-    distance = math.sqrt(delta_x**2 + delta_y**2)
-
-    return distance <= radius
-
-def isBoxTheSameCrossing(boxA, boxB, radius):
-    #if box1 is within box2, we return box1 so we know which to remove
-    def checkBoxInside(box1, box2):
-        min_lat2 = min(lat for lat, lon in box2)
-        max_lat2 = max(lat for lat, lon in box2)
-        min_lon2 = min(lon for lat, lon in box2)
-        max_lon2 = max(lon for lat, lon in box2)
-
-        near_count = 0  # Count of points near box2 corners
-        inside_count = 0  # Count of points inside box2 bounding box
-
-        for lat1, lon1 in box1:
-            # Check if the point is inside the bounding box of box2
-            if min_lat2 <= lat1 <= max_lat2 and min_lon2 <= lon1 <= max_lon2:
-                inside_count += 1
-            # Check if the point is within 2m of any corner in box2
-            elif any(isWithinRadius(lat1, lon1, lat2, lon2, radius) for lat2, lon2 in box2):
-                near_count += 1
-
-    
-        if near_count >= 3 or inside_count >= 3 or near_count == 2 and inside_count == 2:
-            # print("redundant box:", box1)
-            return box1
-        return None
-
-    return checkBoxInside(boxB, boxA) or checkBoxInside(boxA, boxB)
-
-#This method clears by baseName
-def removeDuplicateBoxes(imageDetections, radius=1.5):
-    for baseName in imageDetections:
-        allPointsList = imageDetections[baseName][0]
-        allConfidenceList = imageDetections[baseName][1]
-        while True:
-            toRemove = set()
-            foundRemoval = False
-            for i, j in combinations(range(len(allPointsList)), 2):
-                if i in toRemove or j in toRemove:
-                    continue
-                boxA = allPointsList[i]
-                boxB = allPointsList[j]
-
-                redundantBox = isBoxTheSameCrossing(boxA, boxB, radius=radius)
-                if redundantBox:
-                    idxToRemove = i if redundantBox == boxA else j
-                    toRemove.add(idxToRemove)
-                    foundRemoval = True
-
-            # If no boxes were removed, break the loop
-            if not foundRemoval:
-                break
-
-            allPointsList[:] = [box for i, box in enumerate(allPointsList) if i not in toRemove]
-            allConfidenceList[:] = [conf for i, conf in enumerate(allConfidenceList) if i not in toRemove]
-
-#This method clears by the surrounding chunks
-def removeDuplicateBoxesRC(imageDetectionsRowCol, baseName, row, col, radius=1.5):
-    currentKeyToFilter = f"{baseName}_r{row}_c{col}"
-    
-    if currentKeyToFilter not in imageDetectionsRowCol:
-        return
-    
-    allPointsList = imageDetectionsRowCol[currentKeyToFilter][0]
-    allConfidenceList = imageDetectionsRowCol[currentKeyToFilter][1]
-
-    while True:
-        toRemove = set()
-        foundRemoval = False
-
-        for i in range(len(allPointsList)):
-            if i in toRemove:
-                continue
-
-            boxA = allPointsList[i]
-
-            for d_row in [-3, -2, -1, 0]:  # row shifts
-                for d_col in [-3, -2, -1, 0, 1, 2, 3]:  # col shifts
-                    if d_row == 0 and d_col >= 0:
-                        break
-                    new_row = int(row) + d_row
-                    new_col = int(col) + d_col
-
-                    neighboringChunk = f"{baseName}_r{new_row}_c{new_col}"
-                    
-                    if neighboringChunk not in imageDetectionsRowCol:
-                        continue
-
-                    neighboringBoxes, neighboringConf = imageDetectionsRowCol[neighboringChunk]
-                    toRemoveNeighboring = set()
-                    
-                    for j in range(len(neighboringBoxes)):
-                        boxB = neighboringBoxes[j]
-
-                        redundantBox = isBoxTheSameCrossing(boxA, boxB, radius=radius)
-                        
-                        if redundantBox == boxA:
-                            toRemove.add(i)
-                            foundRemoval = True
-                        elif redundantBox == boxB:
-                            toRemoveNeighboring.add(j)
-                            foundRemoval = True
-
-                    # Remove neighbor boxes outside the loop to prevent index shifting
-                    if toRemoveNeighboring:
-                        neighboringBoxes[:] = [box for x, box in enumerate(neighboringBoxes) if x not in toRemoveNeighboring]
-                        neighboringConf[:] = [conf for x, conf in enumerate(neighboringConf) if x not in toRemoveNeighboring]
-
-        if not foundRemoval:
-            break  # Exit the true loop if no changes were made
-
-        allPointsList[:] = [box for i, box in enumerate(allPointsList) if i not in toRemove]
-        allConfidenceList[:] = [conf for i, conf in enumerate(allConfidenceList) if i not in toRemove]
+from shapely.geometry import Polygon
+import yaml
+from pathlib import Path
+from torchvision.ops import nms
+from torch import is_tensor, tensor
 
 def combineChunksToBaseName(imageDetectionsRowCol):
-    def extractBaseName(name):
-        match = re.match(r"^(.*)_r\d+_c\d+$", name)
-        return match.group(1) if match else name  # Return original if no match
-
     imageDetections = {}
     for nameWithRowCol in imageDetectionsRowCol:
-        baseName = extractBaseName(nameWithRowCol)
+        baseName, _, _ = extract_base_name_and_coords(nameWithRowCol)
         imageDetections.setdefault(baseName, [[], []])
         imageDetections[baseName][0].extend(imageDetectionsRowCol[nameWithRowCol][0])
         imageDetections[baseName][1].extend(imageDetectionsRowCol[nameWithRowCol][1])
     
     return imageDetections
 
-    
+def check_box_intersection(box_1, box_2, threshold=0.6):
+    poly_1 = Polygon(box_1)
+    poly_2 = Polygon(box_2)
+    try:
+        intersection_area = poly_1.intersection(poly_2).area
+        union_area = poly_1.union(poly_2).area
+        iou = intersection_area / union_area if union_area > 0 else 0
 
+        scaled_iou = iou * (max(poly_1.area, poly_2.area) / min(poly_1.area, poly_2.area))
+        return scaled_iou > threshold
+    except:
+        return False  # Return False if the intersection computation fails
+    
+def extract_base_name_and_coords(baseNameWithRowCol):
+    match = re.match(r"([^_]+)__r(-?\d+)__c(-?\d+)", baseNameWithRowCol)
+    if match:
+        baseName = match.group(1)
+        row = int(match.group(2))
+        col = int(match.group(3))
+        return baseName, row, col
+    else:
+        raise ValueError("Input string is not in the expected format.")
+    
+def removeDuplicateBoxes(imageDetections):
+    for baseName in imageDetections:
+        allPointsList = imageDetections[baseName][0]
+        allConfidenceList = imageDetections[baseName][1]
+        toRemove = set()
+
+        for i, j in combinations(range(len(allPointsList)), 2):
+            if i in toRemove or j in toRemove:
+                continue
+            boxA = allPointsList[i]
+            boxB = allPointsList[j]
+            if check_box_intersection(boxA, boxB, threshold=0.7):
+                idxToRemove = i if allConfidenceList[i] <= allConfidenceList[j] else j
+                toRemove.add(idxToRemove)
+
+        allPointsList[:] = [box for i, box in enumerate(allPointsList) if i not in toRemove]
+        allConfidenceList[:] = [conf for i, conf in enumerate(allConfidenceList) if i not in toRemove]
+
+
+
+def removeDuplicateBoxesRC(imageDetectionsRowCol):
+    for currentKeyToFilter in imageDetectionsRowCol:
+        allPointsList = imageDetectionsRowCol[currentKeyToFilter][0]
+        allConfidenceList = imageDetectionsRowCol[currentKeyToFilter][1]
+        toRemove = set()
+        baseName, row, col = extract_base_name_and_coords(currentKeyToFilter)
+        for i in range(len(allPointsList)): #Iterates through every single box within that row and column, then iterates through all possible intersections
+            if i in toRemove:
+                continue
+            boxA = allPointsList[i]
+            try:
+                for d_row in range(-4,5):  # row shifts
+                    for d_col in range(-4,5):  # col shifts
+                        if d_row == 0 and d_col == 0:
+                            continue
+                        new_row = int(row) + d_row
+                        new_col = int(col) + d_col
+                        neighboringChunk = f"{baseName}__r{new_row}__c{new_col}"
+                        
+                        if neighboringChunk not in imageDetectionsRowCol:
+                            continue
+                        neighboringBoxes, neighboringConf = imageDetectionsRowCol[neighboringChunk]
+                        toRemoveNeighboring = set()
+                        
+                        for j in range(len(neighboringBoxes)):
+                            boxB = neighboringBoxes[j]
+                            if check_box_intersection(boxA, boxB, threshold=0.7):
+                                # I really dont know why changing this from <= to < solved it
+                                if allConfidenceList[i] < neighboringConf[j]:
+                                    toRemove.add(i)
+                                else:
+                                    toRemoveNeighboring.add(j)
+                        
+                        # Remove neighbor boxes outside the loop to prevent index shifting
+                        if toRemoveNeighboring:
+                            neighboringBoxes[:] = [box for x, box in enumerate(neighboringBoxes) if x not in toRemoveNeighboring]
+                            neighboringConf[:] = [conf for x, conf in enumerate(neighboringConf) if x not in toRemoveNeighboring]
+            except Exception as e:
+                print(f"there was an error in removeDuplicateBoxesRC: {e}")
+
+        allPointsList[:] = [box for i, box in enumerate(allPointsList) if i not in toRemove]
+        allConfidenceList[:] = [conf for i, conf in enumerate(allConfidenceList) if i not in toRemove]

@@ -54,7 +54,7 @@ def boundBoxSegmentationJGW(classificationThreshold=0.35, extractDir = "run/extr
                         
                         topLeftXGeoInterest = topLeftXGeo + topX * pixelSizeX
                         topLeftYGeoInterest = topLeftYGeo + topY * pixelSizeY
-                        imageAndDatas.append((inputFileName, cropped, pixelSizeX, pixelSizeY, topLeftXGeoInterest, topLeftYGeoInterest)) 
+                        imageAndDatas.append((inputFileName, cropped, pixelSizeX, pixelSizeY, topLeftXGeoInterest, topLeftYGeoInterest, row, col)) 
                 except Exception as e:
                     print(f"Error opening {imagePath}: {e}")
             pbar.update(1)
@@ -97,6 +97,8 @@ def boundBoxSegmentationTIF(classificationThreshold=0.35, extractDir = "run/extr
                         # Use GDAL to create the cropped image, preserving georeference
                         imageChunk = f"{inputFileName}{(topX, topY, boundBoxChunkSize)}"
                         if imageChunk in chunkSeen:
+                            print(row, col, "This has been seen before")
+                            print(imageChunk)
                             continue
                         chunkSeen.add(imageChunk)
                         boundBoxInputImage = gdal.Translate("", dataset, srcWin=[topX, topY, boundBoxChunkSize, boundBoxChunkSize], 
