@@ -10,7 +10,8 @@ from classificationScreening.classify import PIL_infer
 def classificationSegmentation(inputFileName, classificationThreshold, classificationChunkSize):
     image = Image.open(inputFileName)
     width, height = image.size
-    listOfRowColumn = set()
+    print("width and height in classificationSegmentation",width, height)
+    listOfColRow = []
     # Loop to create and save chunks
     for row in range(0, height, classificationChunkSize):
         for col in range(0, width, classificationChunkSize):
@@ -34,7 +35,7 @@ def classificationSegmentation(inputFileName, classificationThreshold, classific
                     rowToAdd = math.ceil(height / classificationChunkSize) - 2
                 elif row == 0:
                     rowToAdd = 1
-                listOfRowColumn.add((colToAdd, rowToAdd))
+                listOfColRow.append((colToAdd, rowToAdd))
 
-    print(listOfRowColumn)
-    return listOfRowColumn
+    print(listOfColRow)
+    return listOfColRow

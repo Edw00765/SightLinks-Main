@@ -56,7 +56,8 @@ def execute(uploadDir = "input", inputType = "0", classificationThreshold = 0.35
         # Run segmentation and prediction
         croppedImagesAndData = boundBoxSegmentationTIF(classificationThreshold, extractDir)
         imageDetections = predictionTIF(imageAndDatas=croppedImagesAndData, predictionThreshold=predictionThreshold, saveLabeledImage=saveLabeledImage, outputFolder=outputFolder, modelType=yoloModelType)
-        removeDuplicateBoxes(imageDetections=imageDetections)
+        # Uncomment the function below to use the O(N^2) filtering process
+        #removeDuplicateBoxes(imageDetections=imageDetections)
         saveToOutput(outputType=outputType, outputFolder=outputFolder, imageDetections=imageDetections)
         print(f"Output saved to {outputFolder} as {outputType}.")
         print(f"Total time taken: {time.time() - start_time:.2f} seconds")
