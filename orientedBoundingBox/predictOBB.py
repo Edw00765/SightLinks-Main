@@ -1,52 +1,117 @@
 from ultralytics import YOLO
+import numpy as np
+from osgeo import gdal, osr
+from PIL import Image
 from tqdm import tqdm
 import os
-import json
 import sys
-import re
 
-# Load a model
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
-from georeference.georeference import georeferecePoints
-from georeference.georeference import BNGtoLatLong
+from georeference.georeference import georeferenceTIF, georefereceJGW, BNGtoLatLong
+from utils.filterOutput import removeDuplicateBoxesRC, combineChunksToBaseName
 
-def getOriginalImageName(filename):
-    """Extract original image name from segmented filename"""
-    # Remove row and column information (e.g., '_r1_c1')
-    return re.sub(r'_r\d+_c\d+$', '', filename)
+# Use this version to filter using the O(N^2) filtering
+# def predictionJGW(imageAndDatas, predictionThreshold=0.25, saveLabeledImage=False, outputFolder="run/output", modelType="n"):
+#     modelPath = f"models/yolo-{modelType}.pt"
+#     model = YOLO(modelPath)  # load an official model
+#     # Dictionary to store all detections and their confidence grouped by original image
+#     imageDetections = {}
+#     numOfSavedImages = 0
+#     # First, process all images and group detections
+#     with tqdm(total=(len(imageAndDatas)), desc="Creating Oriented Bounding Box") as pbar:
+#         for baseName, croppedImage, pixelSizeX, pixelSizeY, topLeftXGeo, topLeftYGeo in imageAndDatas:
+#             try:
+#                 allPointsList = []
+#                 allConfidenceList = []
+#                 results = model(croppedImage, save=saveLabeledImage, conf=predictionThreshold, iou=0.01, 
+#                             project=outputFolder+"/labeledImages", name="run", exist_ok=True, verbose=False)
+#                 if saveLabeledImage and os.path.exists(outputFolder+"/labeledImages/run/image0.jpg"):
+#                     os.rename(outputFolder+"/labeledImages/run/image0.jpg", outputFolder+f"/labeledImages/run/image{numOfSavedImages}.jpg")
+#                     numOfSavedImages += 1
+#                 for result in results:
+#                     result = result.cpu()
+#                     for confidence in result.obb.conf:
+#                         allConfidenceList.append(confidence.item())
+#                     for boxes in result.obb.xyxyxyxy:
+#                         x1, y1 = boxes[0]
+#                         x2, y2 = boxes[1]
+#                         x3, y3 = boxes[2]
+#                         x4, y4 = boxes[3]
+#                         listOfPoints = georefereceJGW(x1,y1,x2,y2,x3,y3,x4,y4,pixelSizeX,pixelSizeY,topLeftXGeo,topLeftYGeo)
+#                         longLatList = BNGtoLatLong(listOfPoints)
+#                         allPointsList.append(longLatList)
+#                     if allPointsList:
+#                         if baseName not in imageDetections:
+#                             imageDetections[baseName] = [[],[]]
+#                         imageDetections[baseName][0].extend(allPointsList)
+#                         imageDetections[baseName][1].extend(allConfidenceList)
+#             except Exception as e:
+#                 print(f"Error processing {croppedImage}: {e}")
+#             pbar.update(1)
+#     return imageDetections
 
-def saveTXTOutput(outputFolder, imageName, coordinates, confidences=None):
-    """Save coordinates and optional confidence scores to a TXT file with one bounding box per line"""
-    txtPath = os.path.join(outputFolder, f"{imageName}.txt")
-    
-    with open(txtPath, 'w') as file:
-        for i, coordSet in enumerate(coordinates):
-            # Format each point as "lon,lat" and join with spaces
-            line = " ".join([f"{point[0]},{point[1]}" for point in coordSet])
-            # Add confidence score if available
-            if confidences is not None and i < len(confidences):
-                line += f" {confidences[i]}"
-            file.write(line + "\n")
+# def predictionTIF(imageAndDatas, predictionThreshold=0.25, saveLabeledImage=False, outputFolder="run/output", modelType="n"):
+#     modelPath = f"models/yolo-{modelType}.pt"
+#     model = YOLO(modelPath)  # load an official model
+#     # Dictionary to store all detections and their confidence grouped by original image
+#     imageDetections = {}
+#     numOfSavedImages = 1
+#     # First, process all images and group detections
+#     with tqdm(total=(len(imageAndDatas)), desc="Creating Oriented Bounding Box") as pbar:
+#         for baseName, croppedImage, _, _ in imageAndDatas:
+#             try:
+#                 allPointsList = []
+#                 allConfidenceList = []
+#                 croppedImageArray = croppedImage.ReadAsArray()
+#                 if croppedImageArray.ndim == 3:
+#                     croppedImageArray = np.moveaxis(croppedImageArray, 0, -1)
+#                 PILImage = Image.fromarray(croppedImageArray)
+#                 results = model(PILImage, save=saveLabeledImage, conf=predictionThreshold, iou=0.9, 
+#                               project=outputFolder+"/labeledImages", name="run", exist_ok=True, verbose=False)
+#                 if saveLabeledImage and os.path.exists(outputFolder+"/labeledImages/run/image0.jpg"):
+#                     os.rename(outputFolder+"/labeledImages/run/image0.jpg", outputFolder+f"/labeledImages/run/image{numOfSavedImages}.jpg")
+#                     numOfSavedImages += 1
+#                 for result in results:
+#                     result = result.cpu()
+#                     for confidence in result.obb.conf:
+#                         allConfidenceList.append(confidence.item())
+#                     for boxes in result.obb.xyxyxyxy:
+#                         x1, y1 = boxes[0].tolist()
+#                         x2, y2 = boxes[1].tolist()
+#                         x3, y3 = boxes[2].tolist()
+#                         x4, y4 = boxes[3].tolist()
+#                         longLatList = georeferenceTIF(croppedImage,x1,y1,x2,y2,x3,y3,x4,y4)
+#                         allPointsList.append(longLatList)                
 
-def prediction(predictionThreshold=0.25, saveLabeledImage=False, outputType="0", outputFolder="run/output", modelType="n"):
+#                     if baseName not in imageDetections:
+#                         imageDetections[baseName] = [[],[]]
+#                     imageDetections[baseName][0].extend(allPointsList)
+#                     imageDetections[baseName][1].extend(allConfidenceList)
+#             except Exception as e:
+#                 print(f"Error processing {baseName}: {e}")
+#             pbar.update(1)
+#     return imageDetections
+
+
+
+# These versions have filtering built in
+def predictionJGW(imageAndDatas, predictionThreshold=0.25, saveLabeledImage=False, outputFolder="run/output", modelType="n"):
     modelPath = f"models/yolo-{modelType}.pt"
     model = YOLO(modelPath)  # load an official model
-    
     # Dictionary to store all detections and their confidence grouped by original image
-    imageDetections = {}
-    
+    imageDetectionsRowCol = {}
+    numOfSavedImages = 1
     # First, process all images and group detections
-    with tqdm(total=(len(os.listdir(outputFolder))//2), desc="Creating Oriented Bounding Box") as pbar:
-        for image in os.listdir(outputFolder):
-            if not image.endswith(('.jpg', '.jpeg', '.png')):
-                continue
-                
-            imagePath = os.path.join(outputFolder, image)
+    with tqdm(total=(len(imageAndDatas)), desc="Creating Oriented Bounding Box") as pbar:
+        for baseName, croppedImage, pixelSizeX, pixelSizeY, topLeftXGeo, topLeftYGeo, row, col in imageAndDatas:
             try:
                 allPointsList = []
                 allConfidenceList = []
-                results = model(imagePath, save=saveLabeledImage, conf=predictionThreshold, iou=0.9, 
-                              project=outputFolder+"/labeledImages", name="run", exist_ok=True, verbose=False)
+                results = model(croppedImage, save=saveLabeledImage, conf=predictionThreshold, iou=0.01, 
+                            project=outputFolder+"/labeledImages", name="run", exist_ok=True, verbose=False)
+                if saveLabeledImage and os.path.exists(outputFolder+"/labeledImages/run/image0.jpg"):
+                    os.rename(outputFolder+"/labeledImages/run/image0.jpg", outputFolder+f"/labeledImages/run/image{numOfSavedImages}.jpg")
+                    numOfSavedImages += 1
                 for result in results:
                     result = result.cpu()
                     for confidence in result.obb.conf:
@@ -56,46 +121,60 @@ def prediction(predictionThreshold=0.25, saveLabeledImage=False, outputType="0",
                         x2, y2 = boxes[1]
                         x3, y3 = boxes[2]
                         x4, y4 = boxes[3]
-                        listOfPoints = georeferecePoints(x1,y1,x2,y2,x3,y3,x4,y4,imagePath)
+                        listOfPoints = georefereceJGW(x1,y1,x2,y2,x3,y3,x4,y4,pixelSizeX,pixelSizeY,topLeftXGeo,topLeftYGeo)
                         longLatList = BNGtoLatLong(listOfPoints)
+                        allPointsList.append(longLatList)
+                    if allPointsList:
+                        baseNameWithRowCol = f"{baseName}_r{row}_c{col}"
+                        imageDetectionsRowCol[baseNameWithRowCol] = [allPointsList,allConfidenceList]
+                        removeDuplicateBoxesRC(imageDetectionsRowCol=imageDetectionsRowCol, baseName=baseName, row=row, col=col)
+            except Exception as e:
+                print(f"Error processing {croppedImage}: {e}")
+            pbar.update(1)
+    imageDetections = combineChunksToBaseName(imageDetectionsRowCol=imageDetectionsRowCol)
+    return imageDetections
+
+# This version of predictionTIF has filtering
+def predictionTIF(imageAndDatas, predictionThreshold=0.25, saveLabeledImage=False, outputFolder="run/output", modelType="n"):
+    modelPath = f"models/yolo-{modelType}.pt"
+    model = YOLO(modelPath)  # load an official model
+    # Dictionary to store all detections and their confidence grouped by image, row, and column
+    imageDetectionsRowCol = {}
+    numOfSavedImages = 1
+    # First, process all images and group detections
+    with tqdm(total=(len(imageAndDatas)), desc="Creating Oriented Bounding Box") as pbar:
+        for baseName, croppedImage, row, col in imageAndDatas:
+            try:
+                allPointsList = []
+                allConfidenceList = []
+                croppedImageArray = croppedImage.ReadAsArray()
+                if croppedImageArray.ndim == 3:
+                    croppedImageArray = np.moveaxis(croppedImageArray, 0, -1)
+                PILImage = Image.fromarray(croppedImageArray)
+                results = model(PILImage, save=saveLabeledImage, conf=predictionThreshold, iou=0.9, 
+                              project=outputFolder+"/labeledImages", name="run", exist_ok=True, verbose=False)
+                if saveLabeledImage and os.path.exists(outputFolder+"/labeledImages/run/image0.jpg"):
+                    os.rename(outputFolder+"/labeledImages/run/image0.jpg", outputFolder+f"/labeledImages/run/image{numOfSavedImages}.jpg")
+                    numOfSavedImages += 1
+                for result in results:
+                    result = result.cpu()
+                    for confidence in result.obb.conf:
+                        allConfidenceList.append(confidence.item())
+                    for boxes in result.obb.xyxyxyxy:
+                        x1, y1 = boxes[0].tolist()
+                        x2, y2 = boxes[1].tolist()
+                        x3, y3 = boxes[2].tolist()
+                        x4, y4 = boxes[3].tolist()
+                        longLatList = georeferenceTIF(croppedImage,x1,y1,x2,y2,x3,y3,x4,y4)
                         allPointsList.append(longLatList)
                 
                 if allPointsList:
-                    # Get original image name
-                    originalImage = getOriginalImageName(os.path.splitext(image)[0])
+                    baseNameWithRowCol = f"{baseName}__r{row}__c{col}"
+                    imageDetectionsRowCol[baseNameWithRowCol] = [allPointsList,allConfidenceList]
                     
-                    # Add detections to the group
-                    if originalImage not in imageDetections:
-                        # Index 0 will contain the coordinates, while index 1 will contain it's confidence. They are related based on their index.
-                        imageDetections[originalImage] = [[],[]]
-                    imageDetections[originalImage][0].extend(allPointsList)
-                    imageDetections[originalImage][1].extend(allConfidenceList)
-                
-                os.remove(imagePath)
-                os.remove(imagePath.replace('jpg', 'jgw'))
-                pbar.update(1)
             except Exception as e:
-                print(f"Error processing {imagePath}: {e}")
-    
-    # Now save the grouped detections
-    if outputType == "0":
-        # Save as JSON
-        jsonOutput = []
-        for originalImage, coordAndConf in imageDetections.items():
-            jsonOutput.append({
-                "image": f"{originalImage}.jpg",
-                "coordinates": coordAndConf[0],
-                "confidence": coordAndConf[1]
-            })
-        
-        jsonPath = os.path.join(outputFolder, "output.json")
-        with open(jsonPath, 'w') as file:
-            json.dump(jsonOutput, file, indent=2)
-        print(f"\nJSON output saved to: {jsonPath}")
-    else:
-        # Save as TXT files
-        for originalImage, coordAndConf in imageDetections.items():
-            saveTXTOutput(outputFolder, originalImage, coordAndConf[0], coordAndConf[1])
-        print(f"\nTXT files saved to: {outputFolder}")
-    
-    print(f"Processed {len(imageDetections)} original images")
+                print(f"Error processing {baseName}: {e}")
+            pbar.update(1)
+    removeDuplicateBoxesRC(imageDetectionsRowCol=imageDetectionsRowCol)
+    imageDetections = combineChunksToBaseName(imageDetectionsRowCol=imageDetectionsRowCol)
+    return imageDetections

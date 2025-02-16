@@ -19,6 +19,7 @@ run/output/
 *.png
 *.jpg
 *.jpeg
+*.tif
 
 # Ignore environment files
 .env
