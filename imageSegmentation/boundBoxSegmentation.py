@@ -22,7 +22,8 @@ def boundBoxSegmentationJGW(classificationThreshold=0.35, extractDir = "run/extr
                     originalImage = Image.open(imagePath)
                     width, height = originalImage.size
                     chunksOfInterest = classificationSegmentation(inputFileName=imagePath, classificationThreshold=classificationThreshold, classificationChunkSize=classificationChunkSize)
-
+                    print(f"{inputFileName} chunks of interest:")
+                    print(chunksOfInterest)
                     #data for georeferencing
                     with open(imagePath.replace('jpg', 'jgw'), 'r') as jgwFile:
                         lines = jgwFile.readlines()
@@ -47,6 +48,8 @@ def boundBoxSegmentationJGW(classificationThreshold=0.35, extractDir = "run/extr
                         box = (topX, topY, topX + boundBoxChunkSize, topY + boundBoxChunkSize)
                         imageChunk = f"{inputFileName}{(topX, topY, boundBoxChunkSize)}"
                         if imageChunk in chunkSeen:
+                            print(col, row, "This has been seen before")
+                            print(imageChunk)
                             continue
                         chunkSeen.add(imageChunk)
                         cropped = originalImage.crop(box)
@@ -78,7 +81,8 @@ def boundBoxSegmentationTIF(classificationThreshold=0.35, extractDir = "run/extr
                     geoTransform = dataset.GetGeoTransform()
                     chunksOfInterest = classificationSegmentation(inputFileName=imagePath, classificationThreshold=classificationThreshold, classificationChunkSize=classificationChunkSize)
                     # Get original filename without extension
-
+                    print(f"{inputFileName} chunks of interest:")
+                    print(chunksOfInterest)
                     for col, row in chunksOfInterest:
                         topRow = row - 1
                         topCol = col - 1

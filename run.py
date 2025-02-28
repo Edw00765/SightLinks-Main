@@ -24,8 +24,6 @@ outputType = "0"
 # 'n' for yolo11n-obb
 # 's' for yolo11s-obb
 # 'm' for yolo11m-obb
-# 'l' for yolo11l-obb
-# 'x' for yolo11x-obb
 yoloModelType = 'n'
 
 # cleanup is if we want to clean up the extract directory

@@ -5,6 +5,7 @@ from PIL import Image
 from tqdm import tqdm
 import os
 import sys
+import traceback
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from georeference.georeference import georeferenceTIF, georefereceJGW, BNGtoLatLong
@@ -16,10 +17,10 @@ from utils.filterOutput import removeDuplicateBoxesRC, combineChunksToBaseName
 #     model = YOLO(modelPath)  # load an official model
 #     # Dictionary to store all detections and their confidence grouped by original image
 #     imageDetections = {}
-#     numOfSavedImages = 0
+#     numOfSavedImages = 1
 #     # First, process all images and group detections
 #     with tqdm(total=(len(imageAndDatas)), desc="Creating Oriented Bounding Box") as pbar:
-#         for baseName, croppedImage, pixelSizeX, pixelSizeY, topLeftXGeo, topLeftYGeo in imageAndDatas:
+#         for baseName, croppedImage, pixelSizeX, pixelSizeY, topLeftXGeo, topLeftYGeo, _, _ in imageAndDatas:
 #             try:
 #                 allPointsList = []
 #                 allConfidenceList = []
@@ -122,15 +123,16 @@ def predictionJGW(imageAndDatas, predictionThreshold=0.25, saveLabeledImage=Fals
                         x3, y3 = boxes[2]
                         x4, y4 = boxes[3]
                         listOfPoints = georefereceJGW(x1,y1,x2,y2,x3,y3,x4,y4,pixelSizeX,pixelSizeY,topLeftXGeo,topLeftYGeo)
-                        longLatList = BNGtoLatLong(listOfPoints)
-                        allPointsList.append(longLatList)
+                        latLongList = BNGtoLatLong(listOfPoints)
+                        allPointsList.append(latLongList)
                     if allPointsList:
-                        baseNameWithRowCol = f"{baseName}_r{row}_c{col}"
+                        baseNameWithRowCol = f"{baseName}__r{row}__c{col}"
                         imageDetectionsRowCol[baseNameWithRowCol] = [allPointsList,allConfidenceList]
-                        removeDuplicateBoxesRC(imageDetectionsRowCol=imageDetectionsRowCol, baseName=baseName, row=row, col=col)
             except Exception as e:
                 print(f"Error processing {croppedImage}: {e}")
             pbar.update(1)
+        
+    removeDuplicateBoxesRC(imageDetectionsRowCol=imageDetectionsRowCol)
     imageDetections = combineChunksToBaseName(imageDetectionsRowCol=imageDetectionsRowCol)
     return imageDetections
 
@@ -153,14 +155,19 @@ def predictionTIF(imageAndDatas, predictionThreshold=0.25, saveLabeledImage=Fals
                 PILImage = Image.fromarray(croppedImageArray)
                 results = model(PILImage, save=saveLabeledImage, conf=predictionThreshold, iou=0.9, 
                               project=outputFolder+"/labeledImages", name="run", exist_ok=True, verbose=False)
+                
                 if saveLabeledImage and os.path.exists(outputFolder+"/labeledImages/run/image0.jpg"):
                     os.rename(outputFolder+"/labeledImages/run/image0.jpg", outputFolder+f"/labeledImages/run/image{numOfSavedImages}.jpg")
                     numOfSavedImages += 1
+                print(results)
                 for result in results:
+                    print(result)
                     result = result.cpu()
                     for confidence in result.obb.conf:
+                        print("confidence", confidence)
                         allConfidenceList.append(confidence.item())
                     for boxes in result.obb.xyxyxyxy:
+                        print("boxes:", boxes)
                         x1, y1 = boxes[0].tolist()
                         x2, y2 = boxes[1].tolist()
                         x3, y3 = boxes[2].tolist()
@@ -174,6 +181,7 @@ def predictionTIF(imageAndDatas, predictionThreshold=0.25, saveLabeledImage=Fals
                     
             except Exception as e:
                 print(f"Error processing {baseName}: {e}")
+                print(traceback.format_exc())
             pbar.update(1)
     removeDuplicateBoxesRC(imageDetectionsRowCol=imageDetectionsRowCol)
     imageDetections = combineChunksToBaseName(imageDetectionsRowCol=imageDetectionsRowCol)

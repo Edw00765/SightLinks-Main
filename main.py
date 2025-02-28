@@ -1,5 +1,4 @@
 from imageSegmentation.boundBoxSegmentation import boundBoxSegmentationJGW, boundBoxSegmentationTIF
-from imageSegmentation.tifResize import tile_resize
 from orientedBoundingBox.predictOBB import predictionJGW, predictionTIF
 from utils.extract import extract_files
 from utils.saveToOutput import saveToOutput
@@ -31,8 +30,8 @@ def create_dir(run_dir):
 
 
 
-def execute(uploadDir = "input", inputType = "0", classificationThreshold = 0.35, predictionThreshold = 0.5, saveLabeledImage = False, outputType = "0", yoloModelType = "n", cleanup=True):
-    if inputType == "0" or inputType == "1":
+def execute(uploadDir = "input", inputType = "1", classificationThreshold = 0.35, predictionThreshold = 0.5, saveLabeledImage = False, outputType = "0", yoloModelType = "n", cleanup=True):
+    if inputType == "1":
         start_time = time.time()
         outputFolder = create_dir("run/output")
         extractDir = create_dir("run/extract")
@@ -40,8 +39,9 @@ def execute(uploadDir = "input", inputType = "0", classificationThreshold = 0.35
         extract_files(inputType, uploadDir, extractDir)
         # Run segmentation and prediction
         croppedImagesAndData = boundBoxSegmentationJGW(classificationThreshold, extractDir)
-        imageDetections = predictionJGW(croppedImagesAndData, predictionThreshold, saveLabeledImage, outputFolder, yoloModelType, inputType)
-        removeDuplicateBoxes(imageDetections=imageDetections)
+        imageDetections = predictionJGW(croppedImagesAndData, predictionThreshold, saveLabeledImage, outputFolder, yoloModelType)
+        # Uncomment the function below to use the O(N^2) filtering process
+        # removeDuplicateBoxes(imageDetections=imageDetections)
         saveToOutput(outputType=outputType, outputFolder=outputFolder, imageDetections=imageDetections)
         print(f"Output saved to {outputFolder} as {outputType}.")
         print(f"Total time taken: {time.time() - start_time:.2f} seconds")
@@ -57,11 +57,11 @@ def execute(uploadDir = "input", inputType = "0", classificationThreshold = 0.35
         croppedImagesAndData = boundBoxSegmentationTIF(classificationThreshold, extractDir)
         imageDetections = predictionTIF(imageAndDatas=croppedImagesAndData, predictionThreshold=predictionThreshold, saveLabeledImage=saveLabeledImage, outputFolder=outputFolder, modelType=yoloModelType)
         # Uncomment the function below to use the O(N^2) filtering process
-        #removeDuplicateBoxes(imageDetections=imageDetections)
+        # removeDuplicateBoxes(imageDetections=imageDetections)
         saveToOutput(outputType=outputType, outputFolder=outputFolder, imageDetections=imageDetections)
         print(f"Output saved to {outputFolder} as {outputType}.")
         print(f"Total time taken: {time.time() - start_time:.2f} seconds")
         if cleanup:
             clean_up(extractDir)
 
-execute(inputType="2", saveLabeledImage = False)
+execute(inputType="2", saveLabeledImage = True)

@@ -11,7 +11,7 @@ def extract_files(input_type, upload_dir, extract_dir):
     """
     Extract or move files to the target directory based on input type
     Args:
-        input_type (str): "0" for digimap data, "1" for custom data
+        input_type (str): "0" for jpg and jgw data, "1" for geotiff data
         upload_dir (str): Directory where input files are located
         extract_dir (str): Directory to copy extracted files to
     """
@@ -30,39 +30,7 @@ def extract_files(input_type, upload_dir, extract_dir):
     # Get list of all files in upload directory
     files = os.listdir(upload_dir)
     
-    if input_type == "0":
-        # Digimap data - only process zip files
-        zip_files = [f for f in files if f.endswith('.zip')]
-        if not zip_files:
-            print("No zip files found")
-            return
-            
-        # Process each zip file with outer progress bar
-        for zip_file in tqdm(zip_files, desc="Processing zip files"):
-            zip_path = os.path.join(upload_dir, zip_file)
-            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                # Extract to a temporary directory
-                temp_dir = 'temp_extract'
-                zip_ref.extractall(temp_dir)
-                
-                # Get list of all files to process
-                files_to_process = []
-                for root, _, files in os.walk(temp_dir):
-                    for filename in files:
-                        if not filename.startswith('._') and filename.endswith(('.jpg', '.jgw')):
-                            files_to_process.append((root, filename))
-                
-                # Process files with inner progress bar
-                for root, filename in tqdm(files_to_process, desc=f"Extracting from {zip_file}", leave=False):
-                    src_path = os.path.join(root, filename)
-                    dst_path = os.path.join(extract_dir, filename)
-                    shutil.copy2(src_path, dst_path)
-                    if filename not in extracted_files:
-                        extracted_files.add(filename)
-                
-                # Clean up temporary directory
-                shutil.rmtree(temp_dir)
-    elif input_type == "1":
+    if input_type == "1":
         # Custom data - check for zip files first
         files_to_process = []
         

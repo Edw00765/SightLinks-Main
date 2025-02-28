@@ -15,11 +15,11 @@ def georefereceJGW(x1,y1,x2,y2,x3,y3,x4,y4,pixelSizeX,pixelSizeY,topLeftXGeo,top
 
 def BNGtoLatLong(listOfPoints):
     transformer = Transformer.from_crs("EPSG:27700", "EPSG:4326", always_xy=True)
-    longLatList = []
+    latLongList = []
     for xBNG, yBNG in listOfPoints:
         long, lat = transformer.transform(xBNG, yBNG)
-        longLatList.append((long, lat))
-    return longLatList
+        latLongList.append((lat, long))
+    return latLongList
 
 
 
