@@ -10,7 +10,7 @@ class TestClassificationSegmentation(unittest.TestCase):
 
     def test_classificationSegmentation(self):
         # Test parameters
-        inputFileName = "512x512.jpg"
+        inputFileName = "testInput/512x512.jpg"
         classificationThreshold = 0.35
         classificationChunkSize = 256
 
@@ -24,7 +24,7 @@ class TestClassificationSegmentation(unittest.TestCase):
 
     def test_classificationSegmentation_blank_cases(self):
         # Test parameters
-        inputFileName = "blank.png"
+        inputFileName = "testInput/blank.png"
         classificationThreshold = 0.35
         classificationChunkSize = 256
 

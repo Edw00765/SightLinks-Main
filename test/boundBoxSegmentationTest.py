@@ -14,7 +14,7 @@ class TestBoundBoxSegmentation(unittest.TestCase):
     def test_boundBoxSegmentationJGW(self):
         testImageFileName = "4000x4000.jpg"
         # Call the function
-        result = boundBoxSegmentationJGW(extractDir="BBSegTestInput")
+        result = boundBoxSegmentationJGW(extractDir="testInput/BBSegInput")
 
         # Verify the result
         for item in result:
@@ -26,7 +26,7 @@ class TestBoundBoxSegmentation(unittest.TestCase):
         testImageFileName = "4000x4000TIF.tif"
 
         # Call the function
-        result = boundBoxSegmentationTIF(extractDir="BBSegTestInput")
+        result = boundBoxSegmentationTIF(extractDir="testInput/BBSegInput")
 
         for item in result:
             self.assertEqual(item[0], testImageFileName)  # Verify the filename
