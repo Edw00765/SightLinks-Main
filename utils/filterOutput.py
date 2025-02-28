@@ -62,156 +62,48 @@ def removeDuplicateBoxes(imageDetections):
         allConfidenceList[:] = [conf for i, conf in enumerate(allConfidenceList) if i not in toRemove]
 
 
-# # This is the fiitering process which filters based on chunks and rows.
-# def removeDuplicateBoxesRC(imageDetectionsRowCol):
-#     with tqdm(total=(len(imageDetectionsRowCol)), desc="Filtering crosswalks") as pbar:
-#         for currentKeyToFilter in imageDetectionsRowCol:
-#             allPointsList = imageDetectionsRowCol[currentKeyToFilter][0]
-#             allConfidenceList = imageDetectionsRowCol[currentKeyToFilter][1]
-#             toRemove = set()
-#             baseName, row, col = extractBaseNameAndCoords(currentKeyToFilter)
-#             for i in range(len(allPointsList)): #Iterates through every single box within that row and column, then iterates through all possible intersections
-#                 if i in toRemove:
-#                     continue
-#                 boxA = allPointsList[i]
-#                 try:
-#                     for d_row in range(-5,6):  # row shifts, it needs to check an extra to 5 in the edge case that the segmentation still produces a duplicate at the edges
-#                         for d_col in range(-5,6):  # col shifts
-#                             if d_row == 0 and d_col == 0:
-#                                 continue
-#                             new_row = row + d_row
-#                             new_col = col + d_col
-#                             neighboringChunk = f"{baseName}__r{new_row}__c{new_col}"
-                            
-#                             if neighboringChunk not in imageDetectionsRowCol:
-#                                 continue
-#                             neighboringBoxes, neighboringConf = imageDetectionsRowCol[neighboringChunk]
-#                             toRemoveNeighboring = set()
-                            
-#                             for j in range(len(neighboringBoxes)):
-#                                 boxB = neighboringBoxes[j]
-#                                 if check_box_intersection(boxA, boxB, threshold=0.7):
-                                    
-#                                     if allConfidenceList[i] <= neighboringConf[j]:
-#                                         toRemove.add(i)
-#                                         break
-#                                     else:
-#                                         toRemoveNeighboring.add(j)
-                            
-#                             # Remove neighbor boxes outside the loop to prevent index shifting
-#                             if toRemoveNeighboring:
-#                                 neighboringBoxes[:] = [box for x, box in enumerate(neighboringBoxes) if x not in toRemoveNeighboring]
-#                                 neighboringConf[:] = [conf for x, conf in enumerate(neighboringConf) if x not in toRemoveNeighboring]
-#                 except Exception as e:
-#                     print(f"there was an error in removeDuplicateBoxesRC: {e}")
+def removeDuplicateBoxesRC(imageDetectionsRowCol):
+    with tqdm(total=len(imageDetectionsRowCol), desc="Filtering crosswalks") as pbar:
+        for currentKeyToFilter in imageDetectionsRowCol:
+            allPointsList, allConfidenceList = imageDetectionsRowCol[currentKeyToFilter]
+            toRemove = set()
+            baseName, row, col = extractBaseNameAndCoords(currentKeyToFilter)
+            toRemoveNeighboringMap = {}
 
-#             allPointsList[:] = [box for i, box in enumerate(allPointsList) if i not in toRemove]
-#             allConfidenceList[:] = [conf for i, conf in enumerate(allConfidenceList) if i not in toRemove]
-#             pbar.update(1)
+            for dRow in range(-5, 6):  # Check neighboring 11x11 grid
+                for dCol in range(-5, 6):
+                    if dRow == 0 and dCol == 0:
+                        continue
 
+                    newRow, newCol = row + dRow, col + dCol
+                    neighboringChunk = f"{baseName}__r{newRow}__c{newCol}"
+                    if neighboringChunk not in imageDetectionsRowCol:
+                        continue
+                    neighboringBoxes, neighboringConf = imageDetectionsRowCol[neighboringChunk]
+                    toRemoveNeighboring = set()
 
+                    for i, boxA in enumerate(allPointsList):
+                        if i in toRemove:
+                            continue
+                        for j, boxB in enumerate(neighboringBoxes):
+                            if j in toRemoveNeighboring:
+                                continue
 
+                            if checkBoxIntersection(boxA, boxB, threshold=0.7):
+                                if allConfidenceList[i] <= neighboringConf[j]:
+                                    toRemove.add(i)
+                                    break
+                                else:
+                                    toRemoveNeighboring.add(j)
+                                    break
+                    if toRemoveNeighboring:
+                        toRemoveNeighboringMap[neighboringChunk] = toRemoveNeighboringMap.get(neighboringChunk, set()).union(toRemoveNeighboring)
 
+            for chunk, indices in toRemoveNeighboringMap.items():
+                imageDetectionsRowCol[chunk][0] = [box for i, box in enumerate(imageDetectionsRowCol[chunk][0]) if i not in indices]
+                imageDetectionsRowCol[chunk][1] = [conf for i, conf in enumerate(imageDetectionsRowCol[chunk][1]) if i not in indices]
 
+            imageDetectionsRowCol[currentKeyToFilter][0] = [box for i, box in enumerate(allPointsList) if i not in toRemove]
+            imageDetectionsRowCol[currentKeyToFilter][1] = [conf for i, conf in enumerate(allConfidenceList) if i not in toRemove]
 
-
-
-
-# # This is the fiitering process which filters based on chunks and rows.
-# def removeDuplicateBoxesRC(imageDetectionsRowCol):
-#     with tqdm(total=(len(imageDetectionsRowCol)), desc="Filtering crosswalks") as pbar:
-#         for currentKeyToFilter in imageDetectionsRowCol:
-#             allPointsList = imageDetectionsRowCol[currentKeyToFilter][0]
-#             allConfidenceList = imageDetectionsRowCol[currentKeyToFilter][1]
-#             toRemove = set()
-#             baseName, row, col = extractBaseNameAndCoords(currentKeyToFilter)
-
-#             for d_row in range(-5,6):  # row shifts, it needs to check an extra to 5 in the edge case that the segmentation still produces a duplicate at the edges
-#                 for d_col in range(-5,6):  # col shifts
-#                     if d_row == 0 and d_col == 0:
-#                         continue
-#                     new_row = row + d_row
-#                     new_col = col + d_col
-#                     neighboringChunk = f"{baseName}__r{new_row}__c{new_col}"
-                    
-#                     if neighboringChunk not in imageDetectionsRowCol:
-#                         continue
-#                     neighboringBoxes, neighboringConf = imageDetectionsRowCol[neighboringChunk]
-#                     toRemoveNeighboring = set()
-
-#                     for i in range(len(allPointsList)): #Iterates through every single box within that row and column, then iterates through all possible intersections
-#                         if i in toRemove:
-#                             continue
-#                         boxA = allPointsList[i]
-#                         try:
-#                             for j in range(len(neighboringBoxes)):
-#                                 if j in toRemoveNeighboring:
-#                                     continue
-#                                 boxB = neighboringBoxes[j]
-#                                 if check_box_intersection(boxA, boxB, threshold=0.7):
-#                                     if allConfidenceList[i] <= neighboringConf[j]:
-#                                         toRemove.add(i)
-#                                         break
-#                                     else:
-#                                         toRemoveNeighboring.add(j)
-#                                         break
-#                         except Exception as e:
-#                             print(f"there was an error in removeDuplicateBoxesRC: {e}")
-
-#                     neighboringBoxes[:] = [box for x, box in enumerate(neighboringBoxes) if x not in toRemoveNeighboring]
-#                     neighboringConf[:] = [conf for x, conf in enumerate(neighboringConf) if x not in toRemoveNeighboring]
-                        
-
-#             allPointsList[:] = [box for i, box in enumerate(allPointsList) if i not in toRemove]
-#             allConfidenceList[:] = [conf for i, conf in enumerate(allConfidenceList) if i not in toRemove]
-#             pbar.update(1)
-
-
-
-
-
-# def removeDuplicateBoxesRC(imageDetectionsRowCol):
-#     with tqdm(total=len(imageDetectionsRowCol), desc="Filtering crosswalks") as pbar:
-#         for currentKeyToFilter in imageDetectionsRowCol:
-#             allPointsList, allConfidenceList = imageDetectionsRowCol[currentKeyToFilter]
-#             toRemove = set()
-#             baseName, row, col = extractBaseNameAndCoords(currentKeyToFilter)
-#             toRemoveNeighboringMap = {}
-
-#             for dRow in range(-5, 6):  # Check neighboring 11x11 grid
-#                 for dCol in range(-5, 6):
-#                     if dRow == 0 and dCol == 0:
-#                         continue
-
-#                     newRow, newCol = row + dRow, col + dCol
-#                     neighboringChunk = f"{baseName}__r{newRow}__c{newCol}"
-#                     if neighboringChunk not in imageDetectionsRowCol:
-#                         continue
-#                     neighboringBoxes, neighboringConf = imageDetectionsRowCol[neighboringChunk]
-#                     toRemoveNeighboring = set()
-
-#                     for i, boxA in enumerate(allPointsList):
-#                         if i in toRemove:
-#                             continue
-#                         for j, boxB in enumerate(neighboringBoxes):
-#                             if j in toRemoveNeighboring:
-#                                 continue
-
-#                             if checkBoxIntersection(boxA, boxB, threshold=0.7):
-#                                 if allConfidenceList[i] <= neighboringConf[j]:
-#                                     toRemove.add(i)
-#                                     break
-#                                 else:
-#                                     toRemoveNeighboring.add(j)
-#                                     break
-#                     if toRemoveNeighboring:
-#                         toRemoveNeighboringMap[neighboringChunk] = toRemoveNeighboringMap.get(neighboringChunk, set()).union(toRemoveNeighboring)
-
-#             for chunk, indices in toRemoveNeighboringMap.items():
-#                 imageDetectionsRowCol[chunk][0] = [box for i, box in enumerate(imageDetectionsRowCol[chunk][0]) if i not in indices]
-#                 imageDetectionsRowCol[chunk][1] = [conf for i, conf in enumerate(imageDetectionsRowCol[chunk][1]) if i not in indices]
-
-#             imageDetectionsRowCol[currentKeyToFilter][0] = [box for i, box in enumerate(allPointsList) if i not in toRemove]
-#             imageDetectionsRowCol[currentKeyToFilter][1] = [conf for i, conf in enumerate(allConfidenceList) if i not in toRemove]
-
-#             pbar.update(1)
+            pbar.update(1)
