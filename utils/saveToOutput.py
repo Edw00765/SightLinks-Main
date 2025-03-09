@@ -15,6 +15,7 @@ def saveTXTOutput(outputFolder, imageName, coordinates, confidences=None):
             file.write(line + "\n")
 
 def saveToOutput(outputType, outputFolder, imageDetections):
+    """Save the image detection results as either JSON or multiple TXT files"""
     if outputType == "0":
         # Save as JSON
         jsonOutput = []

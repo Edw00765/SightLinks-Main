@@ -5,148 +5,117 @@ import sys
 from tqdm import tqdm
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-# from imageSegmentation.tifResize import get_pixel_count, tile_resize
+# from imageSegmentation.tifResize import getPixelCount, tileResize
 
-def extract_files(input_type, upload_dir, extract_dir):
+def extractFiles(inputType, uploadDir, extractDir):
     """
     Extract or move files to the target directory based on input type
     Args:
-        input_type (str): "0" for digimap data, "1" for custom data
-        upload_dir (str): Directory where input files are located
-        extract_dir (str): Directory to copy extracted files to
+        inputType (str): "0" for jpg and jgw data, "1" for geotiff data
+        uploadDir (str): Directory where input files are located
+        extractDir (str): Directory to copy extracted files to
     """
     # Create target directory if it doesn't exist
-    if not os.path.exists(extract_dir):
-        os.makedirs(extract_dir)
+    if not os.path.exists(extractDir):
+        os.makedirs(extractDir)
         
     # Check if upload directory exists
-    if not os.path.exists(upload_dir):
-        print(f"Upload directory {upload_dir} does not exist")
+    if not os.path.exists(uploadDir):
+        print(f"Upload directory {uploadDir} does not exist")
         return
     
-    print(f"Processing files from {upload_dir}")
-    extracted_files = set()  # Keep track of processed files
+    print(f"Processing files from {uploadDir}")
+    extractedFiles = set()  # Keep track of processed files
     
     # Get list of all files in upload directory
-    files = os.listdir(upload_dir)
+    files = os.listdir(uploadDir)
     
-    if input_type == "0":
-        # Digimap data - only process zip files
-        zip_files = [f for f in files if f.endswith('.zip')]
-        if not zip_files:
-            print("No zip files found")
-            return
-            
-        # Process each zip file with outer progress bar
-        for zip_file in tqdm(zip_files, desc="Processing zip files"):
-            zip_path = os.path.join(upload_dir, zip_file)
-            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                # Extract to a temporary directory
-                temp_dir = 'temp_extract'
-                zip_ref.extractall(temp_dir)
-                
-                # Get list of all files to process
-                files_to_process = []
-                for root, _, files in os.walk(temp_dir):
-                    for filename in files:
-                        if not filename.startswith('._') and filename.endswith(('.jpg', '.jgw')):
-                            files_to_process.append((root, filename))
-                
-                # Process files with inner progress bar
-                for root, filename in tqdm(files_to_process, desc=f"Extracting from {zip_file}", leave=False):
-                    src_path = os.path.join(root, filename)
-                    dst_path = os.path.join(extract_dir, filename)
-                    shutil.copy2(src_path, dst_path)
-                    if filename not in extracted_files:
-                        extracted_files.add(filename)
-                
-                # Clean up temporary directory
-                shutil.rmtree(temp_dir)
-    elif input_type == "1":
+    if inputType == "1":
         # Custom data - check for zip files first
-        files_to_process = []
+        filesToProcess = []
         
         # Process files with progress bar
         with tqdm(total=len(files), desc="Processing files") as pbar:
             for file in files:
                 if file.endswith('.zip'):
                     # Process zip file
-                    zip_path = os.path.join(upload_dir, file)
-                    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                        temp_dir = 'temp_extract'
-                        zip_ref.extractall(temp_dir)
+                    zipPath = os.path.join(uploadDir, file)
+                    with zipfile.ZipFile(zipPath, 'r') as zipRef:
+                        tempDir = 'temp_extract'
+                        zipRef.extractall(tempDir)
                         
                         # Add extracted files to processing list
-                        for root, _, extracted in os.walk(temp_dir):
+                        for root, _, extracted in os.walk(tempDir):
                             for filename in extracted:
                                 if not filename.startswith('._'):
-                                    files_to_process.append((root, filename))
+                                    filesToProcess.append((root, filename))
                         
                         # Process extracted files
-                        for root, filename in files_to_process:
-                            src_path = os.path.join(root, filename)
-                            dst_path = os.path.join(extract_dir, filename)
-                            shutil.copy2(src_path, dst_path)
-                            if filename not in extracted_files:
-                                extracted_files.add(filename)
+                        for root, filename in filesToProcess:
+                            srcPath = os.path.join(root, filename)
+                            dstPath = os.path.join(extractDir, filename)
+                            shutil.copy2(srcPath, dstPath)
+                            if filename not in extractedFiles:
+                                extractedFiles.add(filename)
                         
                         # Clean up temporary directory
-                        shutil.rmtree(temp_dir)
+                        shutil.rmtree(tempDir)
                 else:
                     # Only move jpg and jgw files if not a zip
                     if not file.startswith('._') and file.endswith(('.jpg', '.jgw')):
-                        src_path = os.path.join(upload_dir, file)
-                        dst_path = os.path.join(extract_dir, file)
-                        shutil.copy2(src_path, dst_path)
-                        if file not in extracted_files:
-                            extracted_files.add(file)
+                        srcPath = os.path.join(uploadDir, file)
+                        dstPath = os.path.join(extractDir, file)
+                        shutil.copy2(srcPath, dstPath)
+                        if file not in extractedFiles:
+                            extractedFiles.add(file)
                 pbar.update(1)
 
-    elif input_type == "2":
-        extracted_files = set()
+    elif inputType == "2":
+        extractedFiles = set()
 
-    # Process files with progress bar
+        # Process files with progress bar
         with tqdm(total=len(files), desc="Processing files") as pbar:
             for file in files:
                 if file.endswith('.zip'):
                     # Process zip file
-                    zip_path = os.path.join(upload_dir, file)
-                    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                        temp_dir = 'temp_extract'
-                        zip_ref.extractall(temp_dir)
+                    zipPath = os.path.join(uploadDir, file)
+                    with zipfile.ZipFile(zipPath, 'r') as zipRef:
+                        tempDir = 'temp_extract'
+                        zipRef.extractall(tempDir)
 
                         # Add extracted files to processing list
-                        files_to_process = []
-                        for root, _, extracted in os.walk(temp_dir):
+                        filesToProcess = []
+                        for root, _, extracted in os.walk(tempDir):
                             for filename in extracted:
                                 if not filename.startswith('._'):
-                                    files_to_process.append((root, filename))
+                                    filesToProcess.append((root, filename))
 
                         # Process extracted files
-                        for root, filename in files_to_process:
-                            src_path = os.path.join(root, filename)
-                            dst_path = os.path.join(extract_dir, filename)
-                            shutil.copy2(src_path, dst_path)
-                            if filename not in extracted_files:
-                                extracted_files.add(filename)
+                        for root, filename in filesToProcess:
+                            srcPath = os.path.join(root, filename)
+                            dstPath = os.path.join(extractDir, filename)
+                            shutil.copy2(srcPath, dstPath)
+                            if filename not in extractedFiles:
+                                extractedFiles.add(filename)
 
                         # Clean up temporary directory
-                        shutil.rmtree(temp_dir)
+                        shutil.rmtree(tempDir)
                 elif file.endswith('.tif'):
-                    src_path = os.path.join(upload_dir, file)
-                    dst_path = os.path.join(extract_dir, file)
-                    shutil.copy2(src_path, dst_path)
-                    if file not in extracted_files:
-                        extracted_files.add(file)
+                    srcPath = os.path.join(uploadDir, file)
+                    dstPath = os.path.join(extractDir, file)
+                    shutil.copy2(srcPath, dstPath)
+                    if file not in extractedFiles:
+                        extractedFiles.add(file)
                 
-                # Check pixel count and apply tile_resize if necessary        
+                # Check pixel count and apply tileResize if necessary        
                 pbar.update(1)
     
     print("\nProcessed files:")
-    for filename in sorted(extracted_files):
+    for filename in sorted(extractedFiles):
         print(f"- {filename}")
-    print(f"\nTotal files processed: {len(extracted_files)}")
-    print(f"Files saved to: {extract_dir}")
+    print(f"\nTotal files processed: {len(extractedFiles)}")
+    print(f"Files saved to: {extractDir}")
+
 
 """
 example usage:

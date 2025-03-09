@@ -23,8 +23,11 @@ run/output/
 
 # Ignore environment files
 .env
-
 venv
+
+# Keep everything in testInput folder
+!testInput/*
+!testInput/BBSegInput/*
 
 # Ignore .DS_Store
 .DS_Store
