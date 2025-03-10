@@ -9,7 +9,7 @@ import sys
 from tqdm import tqdm
 
 # Add the parent directory to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 # Import the functions to be tested
 from orientedBoundingBox.predictOBB import predictionJGW, predictionTIF

@@ -4,7 +4,7 @@ import os
 from osgeo import gdal, osr
 from pyproj import Transformer
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from georeference.georeference import georeferenceTIF, georefereceJGW, BNGtoLatLong
 
 class TestGeoreferencingFunctions(unittest.TestCase):

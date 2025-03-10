@@ -4,7 +4,7 @@ import os
 from tqdm import tqdm
 
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from utils.filterOutput import (
     combineChunksToBaseName,
     checkBoxIntersection,

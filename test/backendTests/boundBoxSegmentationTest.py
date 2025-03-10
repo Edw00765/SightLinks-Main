@@ -6,7 +6,7 @@ from osgeo import gdal
 
 # Import the functions to be tested
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from imageSegmentation.boundBoxSegmentation import boundBoxSegmentationJGW, boundBoxSegmentationTIF
 
 class TestBoundBoxSegmentation(unittest.TestCase):
@@ -14,7 +14,7 @@ class TestBoundBoxSegmentation(unittest.TestCase):
     def test_boundBoxSegmentationJGW(self):
         testImageFileName = "4000x4000.jpg"
         # Call the function
-        result = boundBoxSegmentationJGW(extractDir="test/testInput/BBSegInput")
+        result = boundBoxSegmentationJGW(extractDir="test/backendTests/testInput/BBSegInput")
 
         # Verify the result
         for item in result:
@@ -26,7 +26,7 @@ class TestBoundBoxSegmentation(unittest.TestCase):
         testImageFileName = "4000x4000TIF.tif"
 
         # Call the function
-        result = boundBoxSegmentationTIF(extractDir="test/testInput/BBSegInput")
+        result = boundBoxSegmentationTIF(extractDir="test/backendTests/testInput/BBSegInput")
 
         for item in result:
             self.assertEqual(item[0], testImageFileName)  # Verify the filename
