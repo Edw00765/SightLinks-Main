@@ -4,9 +4,10 @@ import os
 
 def generateMap(jsonFile, mapCenter, outputFile):
     """
-    Generate a folium map with polygons and confidence markers from the given JSON data. 
+    Generate a folium map with polygons and confidence markers from the given JSON data.
+    The JSON file has to be in the same format as the output of our main function. 
     The outputFile should end with .html
-    
+
     """
     
     # Load JSON data

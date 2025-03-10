@@ -3,15 +3,12 @@ import sys
 import os
 from tqdm import tqdm
 
-# Import the functions to be tested
-
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from utils.filterOutput import (
     combineChunksToBaseName,
     checkBoxIntersection,
     extractBaseNameAndCoords,
-    removeDuplicateBoxes,
     removeDuplicateBoxesRC,
 )
 
@@ -66,23 +63,6 @@ class TestImageDetectionFunctions(unittest.TestCase):
         box1 = [(0, 0), (2, 0), (2, 2), (0, 2)]  # Area = 4
         box2 = [(1, 1), (3, 1), (3, 3), (1, 3)]  # Area = 4
         self.assertFalse(checkBoxIntersection(box1, box2))
-
-    def test_removeDuplicateBoxes(self):
-        # Test removing duplicate boxes
-        imageDetections = {
-            "image1": [
-                [[(0, 0), (1, 0), (1, 1), (0, 1)], [(0, 0), (1, 0), (1, 1), (0, 1)]],
-                [0.9, 0.8],
-            ]
-        }
-        removeDuplicateBoxes(imageDetections)
-        expected = {
-            "image1": [
-                [[(0, 0), (1, 0), (1, 1), (0, 1)]],
-                [0.9],
-            ]
-        }
-        self.assertEqual(imageDetections, expected)
 
 
     def test_removeDuplicateBoxesRC(self):

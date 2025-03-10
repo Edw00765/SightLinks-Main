@@ -57,4 +57,4 @@ def execute(uploadDir = "input", inputType = "1", classificationThreshold = 0.35
         print(f"Output saved to {outputFolder} as {outputType}.")
         print(f"Total time taken: {time.time() - start_time:.2f} seconds")
 
-execute(inputType="2", saveLabeledImage = True)
+execute(saveLabeledImage=True, inputType= "1")
