@@ -12,6 +12,9 @@ run/output/
 # Ignore cache folder
 .cache/
 
+# Keep everything in test folder
+!test/*
+
 # Ignore zip files and data
 *.zip
 *.jgw
@@ -24,9 +27,6 @@ run/output/
 # Ignore environment files
 .env
 venv
-
-# Keep everything in test folder
-!test/*
 
 # Ignore .DS_Store
 .DS_Store
