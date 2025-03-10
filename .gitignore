@@ -25,9 +25,8 @@ run/output/
 .env
 venv
 
-# Keep everything in testInput folder
-!test/testInput/*
-!test/testInput/BBSegInput/*
+# Keep everything in test folder
+!test/*
 
 # Ignore .DS_Store
 .DS_Store

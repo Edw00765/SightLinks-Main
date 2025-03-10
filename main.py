@@ -28,8 +28,8 @@ def create_dir(run_dir):
 
 
 
-def execute(uploadDir = "input", inputType = "1", classificationThreshold = 0.35, predictionThreshold = 0.5, saveLabeledImage = False, outputType = "0", yoloModelType = "n"):
-    if inputType == "1":
+def execute(uploadDir = "input", inputType = "0", classificationThreshold = 0.35, predictionThreshold = 0.5, saveLabeledImage = False, outputType = "0", yoloModelType = "n"):
+    if inputType == "0":
         start_time = time.time()
         outputFolder = create_dir("run/output")
         extractDir = create_dir("run/extract")
@@ -57,4 +57,4 @@ def execute(uploadDir = "input", inputType = "1", classificationThreshold = 0.35
         print(f"Output saved to {outputFolder} as {outputType}.")
         print(f"Total time taken: {time.time() - start_time:.2f} seconds")
 
-execute(saveLabeledImage=True, inputType= "1")
+execute(saveLabeledImage=True, inputType= "0")
