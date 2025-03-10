@@ -13,8 +13,12 @@ run/output/
 .cache/
 
 # Keep everything in test folder
-!test/*
+!test/
+!test/APITests/
+!test/APITests/testInput/
 !test/APITests/testInput/*
+!test/backendTests/
+!test/backendTests/testInput/
 !test/backendTests/testInput/*
 
 # Ignore zip files and data
