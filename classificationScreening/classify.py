@@ -29,8 +29,8 @@ def load_mobileNet_classifier(state_dict_path):
     # Ignore depreciation warnings --> It works fine for our needs
     model = models.mobilenet_v3_small()
     model.classifier[3] = torch.nn.Linear(model.classifier[3].in_features, 2)
-
-    state_dict = torch.load(state_dict_path)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    state_dict = torch.load(state_dict_path, map_location=device)
     model.load_state_dict(state_dict)
 
     model.eval()
