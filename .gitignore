@@ -12,14 +12,12 @@ run/output/
 # Ignore cache folder
 .cache/
 
-# Keep everything in test folder
+# Keep everything in the test folder
 !test/
-!test/APITests/
-!test/APITests/testInput/
-!test/APITests/testInput/*
-!test/backendTests/
-!test/backendTests/testInput/
-!test/backendTests/testInput/*
+!test/**/*
+
+# Exclude __pycache__ directories within the test folder
+test/**/__pycache__/
 
 # Ignore zip files and data
 *.zip
