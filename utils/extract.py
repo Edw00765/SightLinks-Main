@@ -30,7 +30,7 @@ def extractFiles(inputType, uploadDir, extractDir):
     # Get list of all files in upload directory
     files = os.listdir(uploadDir)
     
-    if inputType == "1":
+    if inputType == "0":
         # Custom data - check for zip files first
         filesToProcess = []
         
@@ -62,7 +62,7 @@ def extractFiles(inputType, uploadDir, extractDir):
                         shutil.rmtree(tempDir)
                 else:
                     # Only move jpg and jgw files if not a zip
-                    if not file.startswith('._') and file.endswith(('.jpg', '.jgw')):
+                    if not file.startswith('._') and file.endswith(('.jpg', '.jpeg', '.png', '.jgw')):
                         srcPath = os.path.join(uploadDir, file)
                         dstPath = os.path.join(extractDir, file)
                         shutil.copy2(srcPath, dstPath)
@@ -70,7 +70,7 @@ def extractFiles(inputType, uploadDir, extractDir):
                             extractedFiles.add(file)
                 pbar.update(1)
 
-    elif inputType == "2":
+    elif inputType == "1":
         extractedFiles = set()
 
         # Process files with progress bar

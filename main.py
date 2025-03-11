@@ -43,7 +43,7 @@ def execute(uploadDir = "input", inputType = "0", classificationThreshold = 0.35
         print(f"Output saved to {outputFolder} as {outputType}.")
         print(f"Total time taken: {time.time() - start_time:.2f} seconds")
 
-    else:
+    elif inputType == "1":
         start_time = time.time()
         outputFolder = create_dir("run/output")
         extractDir = create_dir("run/extract")
