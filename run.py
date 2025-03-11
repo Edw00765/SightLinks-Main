@@ -4,7 +4,7 @@ from main import execute
 uploadDir = "input"
 
 # inputType is used to determine if we are using digimap data or not
-# 0 for digimap data, 1 for custom data
+# 0 for .jpg, .jpeg, .png and their corresponding .jgw file, 1 is for .tif files
 inputType = "0"
 
 # classification threshold is used by boundBoxSegmentation to modify the threshold for the classification
@@ -26,9 +26,6 @@ outputType = "0"
 # 'm' for yolo11m-obb
 yoloModelType = 'n'
 
-# cleanup is if we want to clean up the extract directory
-cleanup = True
-
 if __name__ == "__main__":
     execute(uploadDir, 
             inputType, 
@@ -36,5 +33,5 @@ if __name__ == "__main__":
             predictionThreshold, 
             saveLabeledImage, 
             outputType, 
-            yoloModelType,
-            cleanup)
+            yoloModelType
+            )

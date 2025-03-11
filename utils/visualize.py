@@ -2,20 +2,21 @@ import folium
 import json
 import os
 
-def generateMap(jsonFile, mapCenter, outputFile):
+def generateMap(jsonFile, outputFile):
     """
-    Generate a folium map with polygons and confidence markers from the given JSON data. 
+    Generate a folium map with polygons and confidence markers from the given JSON data.
+    The JSON file has to be in the same format as the output of our main function. 
     The outputFile should end with .html
-    
+
     """
     
     # Load JSON data
     with open(jsonFile, "r") as f:
         data = json.load(f)
 
+    mapCenter = data[0]["coordinates"][0][0]
     # Create a folium map centered at the provided mapCenter
     m = folium.Map(location=mapCenter, zoom_start=16)
-
     # Extract coordinates and confidence values
     coordinates = data[0]["coordinates"]
     confidenceValues = data[0]["confidence"]
@@ -43,4 +44,3 @@ def generateMap(jsonFile, mapCenter, outputFile):
     # Save the map to the specified outputFile
     m.save(outputFile)
     print(f"Map saved as {outputFile}")
-

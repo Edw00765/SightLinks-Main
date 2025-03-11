@@ -12,6 +12,13 @@ run/output/
 # Ignore cache folder
 .cache/
 
+# Keep everything in the test folder
+!test/
+!test/**/*
+
+# Exclude __pycache__ directories within the test folder
+test/**/__pycache__/
+
 # Ignore zip files and data
 *.zip
 *.jgw
@@ -24,10 +31,6 @@ run/output/
 # Ignore environment files
 .env
 venv
-
-# Keep everything in testInput folder
-!testInput/*
-!testInput/BBSegInput/*
 
 # Ignore .DS_Store
 .DS_Store
