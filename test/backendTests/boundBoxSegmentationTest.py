@@ -23,7 +23,7 @@ class TestBoundBoxSegmentation(unittest.TestCase):
             self.assertEqual(item[1].size, (1024, 1024))  # Verify the size of the cropped image
 
     def test_boundBoxSegmentationTIF(self):
-        testImageFileName = "4000x4000TIF.tif"
+        testImageFileName = "1024x1024TIF.tif"
 
         # Call the function
         result = boundBoxSegmentationTIF(extractDir="test/backendTests/testInput/BBSegInput")
