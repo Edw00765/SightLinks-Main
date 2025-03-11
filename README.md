@@ -1,6 +1,6 @@
 # SightLink
 
-SightLink is a computer vision system designed to detect and georeference crosswalks in aerial imagery. It processes .jpg with their corresponding .jgw file and .tif files, providing oriented bounding boxes with latitude and longitude coordinates. The system uses a combination of image segmentation, mobileNet detection, YOLO-based detection, georeferencing, and filtering to accurately identify and locate crosswalks in aerial photographs.
+SightLink is a computer vision system designed to detect and georeference crosswalks in aerial imagery. It processes .jpg (or .jpeg, .png) with their corresponding .jgw file and .tif files, providing oriented bounding boxes with latitude and longitude coordinates. The system uses a combination of image segmentation, mobileNet detection, YOLO-based detection, georeferencing, and filtering to accurately identify and locate crosswalks in aerial photographs.
 
 ## Table of Contents
 
@@ -96,7 +96,7 @@ from main import execute
 
 execute(
     uploadDir="input",           # Input directory
-    inputType="0",              # "1" for .jpg/.jgw, "1" for .tif files
+    inputType="0",              # "0" for .jpg/.jgw, "1" for .tif files
     classificationThreshold=0.35,
     predictionThreshold=0.5,
     saveLabeledImage=False,
@@ -144,19 +144,22 @@ run/output/YYYYMMDD_HHMMSS/  # Timestamp-based directory
 ```
 SightLink-Main/
 ├── classificationScreening/    # Building classification module
-│   ├── Classify.py            # Main classification logic
+│   ├── classify.py            # Main classification logic
 │   └── utils/                 # Classification utilities
 ├── imageSegmentation/         # Image segmentation modules
 │   ├── boundBoxSegmentation.py       # Bounding box segmentation
 │   └── classificationSegmentation.py  # Classification segmentation
 ├── models/                    # YOLO model files
 │   ├── yolo-n.pt             # Nano model
-│   └── MobileNetV3_state_dict_big_train.pth     # Classification Model
+│   └── mn3_vs55.pth     # Classification Model
 ├── georeference/             # Georeferencing utilities
 │   └── Georeference.py       # Coordinate conversion functions
 ├── utils/                    # Utility functions
 │   ├── extract.py           # File extraction handling
-│   └── analyze.py           # Result analysis tools
+│   ├── compress.py           # File compression handling
+│   ├── filterOutput.py           # Filters bounding boxes to remove duplicates
+│   ├── saveToOutput.py           # Saves stored coordinates to output file
+│   └── visualize.py           # Result analysis tools
 ├── run/                      # Runtime directories
 │   └── output/              # Timestamped outputs
 ├── input/                   # Input file directory
@@ -196,12 +199,14 @@ SightLink-Main/
    - Converts pixel coordinates to geographical coordinates
    - Uses .jgw world files or data stored in .tif files for accurate mapping 
    - Handles coordinate system transformations
-7. **Output Generation**
+7. **Filtering**
+
+   - Removes duplicate bounding boxes by using Non-Maximum Suppression
+8. **Output Generation**
 
    - Creates timestamped directories
    - Generates selected output format
    - Optionally saves labeled images
-   - Cleans up temporary files
 
 ### Performance Optimization
 
@@ -214,6 +219,5 @@ SightLink-Main/
 
 Common issues and solutions:
 
-- **GPU not detected**: Ensure CUDA toolkit is installed
 - **Memory errors**: Reduce batch size or use nano model
 - **Missing files**: Check input directory structure
