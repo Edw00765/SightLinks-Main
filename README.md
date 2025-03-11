@@ -63,18 +63,6 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. Set up model files:
-
-- Download and place YOLO model files in the `models/` directory:
-  - `yolo-n.pt` (nano model)
-  - Other model variants as needed
-
-5. Create required directories:
-
-```bash
-mkdir -p input run/output
-```
-
 ## Quick Start
 
 1. Place input files in the `input` directory:
@@ -92,6 +80,7 @@ python run.py
 ### Basic Usage
 
 ```python
+// This snippet of code is from run.py
 from main import execute
 
 execute(
