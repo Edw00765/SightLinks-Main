@@ -27,6 +27,7 @@ test/**/__pycache__/
 *.jpg
 *.jpeg
 *.tif
+*.xml
 
 # Ignore environment files
 .env
