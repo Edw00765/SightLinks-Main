@@ -38,7 +38,9 @@ def boundBoxSegmentationJGW(classificationThreshold=0.35, extractDir = "run/extr
                     width, height = originalImage.size
                     chunksOfInterest = classificationSegmentation(inputFileName=imagePath, classificationThreshold=classificationThreshold, classificationChunkSize=classificationChunkSize)
                     #data for georeferencing
-                    with open(imagePath.replace('jpg', 'jgw'), 'r') as jgwFile:
+                    baseName, _ = os.path.splitext(imagePath)
+                    jgwPath = baseName + ".jgw"
+                    with open(jgwPath) as jgwFile:
                         lines = jgwFile.readlines()
                     pixelSizeX = float(lines[0].strip())
                     pixelSizeY = float(lines[3].strip())
@@ -61,8 +63,6 @@ def boundBoxSegmentationJGW(classificationThreshold=0.35, extractDir = "run/extr
                             continue
                         chunkSeen.add(imageChunk)
                         cropped = originalImage.crop(box)
-
-                        cropped.save("cropped.jpg")
 
                         topLeftXGeoInterest = topLeftXGeo + topX * pixelSizeX
                         topLeftYGeoInterest = topLeftYGeo + topY * pixelSizeY
