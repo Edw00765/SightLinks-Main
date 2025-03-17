@@ -83,7 +83,7 @@ def extractBaseNameAndCoords(baseNameWithRowCol):
     
     
 
-def removeDuplicateBoxesRC(imageDetectionsRowCol):
+def removeDuplicateBoxesRC(imageDetectionsRowCol, boundBoxChunkSize, classificationChunkSize):
     """
     Remove duplicate bounding boxes that overlap with neighboring chunks in an 11x11 grid. This is chosen because this is the
     max difference in row and column where an overlap in the image segmented could occur.
@@ -91,9 +91,12 @@ def removeDuplicateBoxesRC(imageDetectionsRowCol):
     Args:
         imageDetectionsRowCol (dict): Dictionary with chunked detection results, where each chunk 
                                       contains bounding boxes and corresponding confidence scores.
+        boundBoxChunkSize (int): The size of each side of the bounding box image.
+        classificationChunkSize (int): The size of each side of the classification image.
     
     This function directly modifies the `imageDetectionsRowCol` dictionary by removing duplicate boxes.
     """
+    checkArea = math.ceil(boundBoxChunkSize / classificationChunkSize) + 1
     with tqdm(total=len(imageDetectionsRowCol), desc="Filtering crosswalks") as pbar:
         for currentKeyToFilter in imageDetectionsRowCol:
             allPointsList, allConfidenceList = imageDetectionsRowCol[currentKeyToFilter]
@@ -101,8 +104,8 @@ def removeDuplicateBoxesRC(imageDetectionsRowCol):
             baseName, row, col = extractBaseNameAndCoords(currentKeyToFilter)
             toRemoveNeighboringMap = {}
 
-            for dRow in range(-5, 6):  # Check 11x11 grid, with the current image being in the center.
-                for dCol in range(-5, 6):
+            for dRow in range(-checkArea, checkArea + 1):  # Check 11x11 grid, with the current image being in the center.
+                for dCol in range(-checkArea, checkArea + 1):
                     if dRow == 0 and dCol == 0: # If it is currently checking itself, skip to the next neighbor.
                         continue
 

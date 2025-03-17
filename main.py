@@ -14,6 +14,10 @@ os.environ["GDAL_DISABLE_READDIR_ON_OPEN"] = "YES"
 os.environ["GDAL_MAX_IMAGE_PIXELS"] = "None"
 Image.MAX_IMAGE_PIXELS = None
 
+boundBoxChunkSize = 1024
+classificationChunkSize = 256
+
+
 def create_dir(run_dir):
     """Create and return timestamped output directory"""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -28,7 +32,7 @@ def create_dir(run_dir):
 
 
 
-def execute(uploadDir = "input", inputType = "0", classificationThreshold = 0.35, predictionThreshold = 0.5, saveLabeledImage = False, outputType = "0", yoloModelType = "n"):
+def execute(uploadDir = "input", inputType = "0", classificationThreshold = 0.35, predictionThreshold = 0.5, saveLabeledImage = False, outputType = "0", yoloModelType = "m"):
     if inputType == "0":
         start_time = time.time()
         outputFolder = create_dir("run/output")
@@ -36,8 +40,8 @@ def execute(uploadDir = "input", inputType = "0", classificationThreshold = 0.35
         # Extract files if needed
         extractFiles(inputType, uploadDir, extractDir)
         # Run segmentation and prediction
-        croppedImagesAndData = boundBoxSegmentationJGW(classificationThreshold, extractDir)
-        imageDetections = predictionJGW(croppedImagesAndData, predictionThreshold, saveLabeledImage, outputFolder, yoloModelType)
+        croppedImagesAndData = boundBoxSegmentationJGW(classificationThreshold, extractDir, boundBoxChunkSize, classificationChunkSize)
+        imageDetections = predictionJGW(imageAndDatas=croppedImagesAndData, predictionThreshold=predictionThreshold, saveLabeledImage=saveLabeledImage, outputFolder=outputFolder, modelType=yoloModelType)
         
         saveToOutput(outputType=outputType, outputFolder=outputFolder, imageDetections=imageDetections)
         print(f"Output saved to {outputFolder} as {outputType}.")
@@ -50,7 +54,7 @@ def execute(uploadDir = "input", inputType = "0", classificationThreshold = 0.35
         # Extract files if needed
         extractFiles(inputType, uploadDir, extractDir)
         # Run segmentation and prediction
-        croppedImagesAndData = boundBoxSegmentationTIF(classificationThreshold, extractDir)
+        croppedImagesAndData = boundBoxSegmentationTIF(classificationThreshold, extractDir, boundBoxChunkSize, classificationChunkSize)
         imageDetections = predictionTIF(imageAndDatas=croppedImagesAndData, predictionThreshold=predictionThreshold, saveLabeledImage=saveLabeledImage, outputFolder=outputFolder, modelType=yoloModelType)
         
         saveToOutput(outputType=outputType, outputFolder=outputFolder, imageDetections=imageDetections)
