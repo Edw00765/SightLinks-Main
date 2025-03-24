@@ -60,6 +60,8 @@ venv\Scripts\activate
 3. Install dependencies:
 
 ```bash
+sudo apt update
+sudo apt install gdal-bin libgdal-dev
 pip install -r requirements.txt
 ```
 
