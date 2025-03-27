@@ -41,10 +41,15 @@ def BNGtoLatLong(listOfPoints):
     Returns:
         latLongList (list): It is a list of latitude and longitudes, representing the corners of a bounding box.
     """
-    transformer = Transformer.from_crs("EPSG:27700", "EPSG:4326", always_xy=True)
+    bng = osr.SpatialReference()
+    bng.ImportFromEPSG(27700)
+    wgs84 = osr.SpatialReference()
+    wgs84.ImportFromEPSG(4326)
+
+    transform = osr.CoordinateTransformation(bng, wgs84)
     latLongList = []
     for xBNG, yBNG in listOfPoints:
-        long, lat = transformer.transform(xBNG, yBNG)
+        lat, long, _ = transform.TransformPoint(xBNG, yBNG)
         latLongList.append((lat, long))
     return latLongList
 
