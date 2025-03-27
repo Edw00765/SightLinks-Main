@@ -4,7 +4,6 @@ from utils.extract import extractFiles
 from utils.saveToOutput import saveToOutput
 from datetime import datetime
 from PIL import Image
-from osgeo import gdal
 import os
 import time
 import sys

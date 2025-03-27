@@ -1,6 +1,5 @@
 from ultralytics import YOLO
 import numpy as np
-from osgeo import gdal, osr
 from PIL import Image
 from tqdm import tqdm
 import os

@@ -1,5 +1,4 @@
-from pyproj import Transformer
-from osgeo import gdal, osr
+from osgeo import osr
 
 def georefereceJGW(x1,y1,x2,y2,x3,y3,x4,y4,pixelSizeX,pixelSizeY,topLeftXGeo,topLeftYGeo):
     """
