@@ -6,7 +6,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from classificationScreening.classify import PIL_infer
 
-def classificationSegmentation(inputFileName, classificationThreshold, classificationChunkSize):
+def classificationSegmentation(inputFileName, classificationThreshold, classificationChunkSize, boundBoxChunkSize):
     """
     Divides the images into square chunks, and passes it into the classification model.
     It will then keep track of the row and column where the classification model returns true, and return it.
@@ -19,8 +19,13 @@ def classificationSegmentation(inputFileName, classificationThreshold, classific
     Returns:
         listOfRowCol (list): A list of row and columns of interest.
     """
+
     image = Image.open(inputFileName)
     width, height = image.size
+
+    lowerFilteringBound = math.ceil(boundBoxChunkSize / classificationChunkSize) // 2 - 1
+    upperWidthFilteringBound = math.ceil(width / classificationChunkSize) - 1 - lowerFilteringBound
+    upperHeightFilteringBound = math.ceil(height / classificationChunkSize) - 1 - lowerFilteringBound
     listOfRowCol = []
     # row and col represents the coordinates for the top left point of the new cropped image
     for row in range(0, height, classificationChunkSize):
@@ -37,17 +42,15 @@ def classificationSegmentation(inputFileName, classificationThreshold, classific
             if containsCrossing:
                 rowToAdd = row // classificationChunkSize
                 colToAdd = col // classificationChunkSize
-                # The reason we are adding this is due to the way it is being set up, it allows us to filter the output more efficiently.
-                # Changing the row and column of interest of these will not affect the image segmentation at all, so there should be no
-                # unexpected behavior.
-                if xDifference:
-                    colToAdd = math.ceil(width / classificationChunkSize) - 2
-                elif col == 0:
-                    colToAdd = 1
-                if yDifference:
-                    rowToAdd = math.ceil(height / classificationChunkSize) - 2
-                elif row == 0:
-                    rowToAdd = 1
+
+                if colToAdd >= upperWidthFilteringBound:
+                    colToAdd = upperWidthFilteringBound
+                elif colToAdd <= lowerFilteringBound:
+                    colToAdd = lowerFilteringBound
+                if rowToAdd >= upperHeightFilteringBound:
+                    rowToAdd = upperHeightFilteringBound
+                elif rowToAdd <= lowerFilteringBound:
+                    rowToAdd = lowerFilteringBound
                 listOfRowCol.append((rowToAdd, colToAdd))
 
     return listOfRowCol
