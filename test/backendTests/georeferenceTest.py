@@ -2,7 +2,6 @@ import unittest
 import sys
 import os
 from osgeo import gdal, osr
-from pyproj import Transformer
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from georeference.georeference import georeferenceTIF, georefereceJGW, BNGtoLatLong
@@ -34,10 +33,16 @@ class TestGeoreferencingFunctions(unittest.TestCase):
         result = BNGtoLatLong(listOfPoints)
 
         # Calculate expected values using the same transformer as the function
-        transformer = Transformer.from_crs("EPSG:27700", "EPSG:4326", always_xy=True)
+        bng = osr.SpatialReference()
+        bng.ImportFromEPSG(27700)
+        wgs84 = osr.SpatialReference()
+        wgs84.ImportFromEPSG(4326)
+
+        transform = osr.CoordinateTransformation(bng, wgs84)
+
         expected = []
         for xBNG, yBNG in listOfPoints:
-            long, lat = transformer.transform(xBNG, yBNG)
+            lat, long, _ = transform.TransformPoint(xBNG, yBNG)
             expected.append((lat, long))
 
         self.assertEqual(result, expected)
