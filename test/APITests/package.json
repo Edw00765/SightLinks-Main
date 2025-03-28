@@ -1,0 +1,36 @@
+{
+  "name": "sightlink-api-tests",
+  "version": "1.0.0",
+  "description": "API tests for SightLink",
+  "type": "module",
+  "scripts": {
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:api-test": "vitest test.test.js",
+    "test:api-predict": "vitest api-predict.test.js",
+    "test:server-status": "vitest server-status.test.js",
+    "test:web-predict": "vitest web-predict.test.js",
+    "test:web-status": "vitest web-status.test.js",
+    "test:web-download": "vitest web-download.test.js",
+    "test:web-cancel": "vitest web-cancel.test.js",
+    "test:serial": "vitest run --no-file-parallelism",
+    "test:api-test:serial": "vitest test.test.js --no-file-parallelism",
+    "test:api-predict:serial": "vitest api-predict.test.js --no-file-parallelism",
+    "test:server-status:serial": "vitest server-status.test.js --no-file-parallelism",
+    "test:web-predict:serial": "vitest web-predict.test.js --no-file-parallelism",
+    "test:web-status:serial": "vitest web-status.test.js --no-file-parallelism",
+    "test:web-download:serial": "vitest web-download.test.js --no-file-parallelism",
+    "test:web-cancel:serial": "vitest web-cancel.test.js --no-file-parallelism"
+  },
+  "dependencies": {
+    "@vitest/coverage-v8": "^3.0.7",
+    "@vitest/ui": "^3.0.7",
+    "vitest": "^3.0.7"
+  },
+  "devDependencies": {
+    "jszip": "^3.10.1",
+    "vite": "^6.2.3"
+  }
+}

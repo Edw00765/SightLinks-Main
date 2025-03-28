@@ -1,32 +1,35 @@
 # Sightlink API Test Suite
 
-This test suite verifies the functionality of the Sightlink API endpoints using both basic API tests and functional tests with real data.
+This test suite verifies the functionality of the Sightlink API endpoints using automated tests with real data.
 
 ## Prerequisites
 
 - Node.js environment
 - npm (Node Package Manager)
-- Access to the Sightlink API (base URL: http://api.sightlinks.org)
+- Access to the Sightlink API (base URL: https://sightlinks.org/api)
 - Test data files in the correct location:
-  - `tests/testInput/digimap-data/small-dataset.zip`
-  - **NOTE**: Not uploading digimap test data to Github due to licensincing concerns. Install your own digimap dataset, rename it to "small-dataset", then place the zip in the listed directory above to add your own test data.
+  - `data-and-images/digimap-data/small-dataset.zip`
+
 
 ## Test Structure
 
-### 1. API Tests (`api.test.js`)
+### API Tests
 
-Basic API endpoint tests that verify:
-- Direct processing endpoint (`/predict`) accepts POST requests
-- Web processing endpoint (`/web/predict`) accepts POST requests
-- Status checking endpoint (`/web/status/{task_id}`) is accessible
-- Download endpoint (`/download/{task_id}`) requires authentication
+1. **Predict Endpoint Tests** (`api-predict.test.js`)
+   - Tests the `/predict` endpoint
+   - Verifies file processing with default parameters
+   - Tests custom parameter handling
+   - Includes error handling for invalid requests
 
-### 2. Functional Tests (`functional.test.js`)
+2. **Web Status Tests** (`web-status.test.js`)
+   - Tests the `/web/status/{task_id}` endpoint
+   - Verifies task status retrieval
+   - Validates response format and fields
 
-End-to-end tests using real Digimap data that verify:
-- Complete processing workflow with the small dataset
-- Processing with custom detection thresholds
-- Error handling for invalid ZIP files
+3. **Server Status Tests** (`server-status.test.js`)
+   - Tests server health and configuration
+   - Verifies available models and directories
+   - Monitors system resource usage
 
 ## Running the Tests
 
@@ -35,48 +38,55 @@ End-to-end tests using real Digimap data that verify:
 npm install
 ```
 
-2. Run all tests:
+2. Run all tests serially (recommended):
 ```bash
-npm test
+npm run test:serial
+```
+
+3. Run specific test files:
+```bash
+npm run test:api-predict    # Run predict endpoint tests
+npm run test:web-status     # Run web status tests
+npm run test:server-status  # Run server status tests
 ```
 
 ## Test Data Requirements
 
 ### Small Dataset
-- Location: `tests/testInput/digimap-data/small-dataset.zip`
-- Contains 9 images for segmentation
-- Expected to generate 38 segments for processing
-- Used for main processing workflow test
+- Location: `data-and-images/digimap-data/small-dataset.zip`
+- Used for testing the processing workflow
+- Ensure the dataset is properly formatted and contains valid images
 
-## Test Timeouts
+## Error Handling
 
-- Main processing test: 15 minutes
-- Custom parameters test: 5 minutes
-- Invalid ZIP test: 5 minutes
+The test suite includes robust error handling:
+- Automatic retries for transient server errors
+- Exponential backoff between retry attempts
+- Detailed logging of server responses
+- Specific handling for server restart scenarios
 
 ## Expected API Responses
 
-### Processing Endpoints
-- POST `/web/predict`: Returns 200 with task_id for valid requests
-- POST `/predict`: Returns 400 for invalid requests
+### Predict Endpoint
+- POST `/predict`
+  - Success: 200 with `{ status: 'success', message: 'Processing completed', output_path: string }`
+  - Error: 400 for invalid requests, 500 for server errors
 
-### Status Endpoint
-- GET `/web/status/{task_id}`: Returns 200 with processing status
-- Status includes:
-  - `has_detections`: boolean
-  - `log`: string (processing stage message)
-  - `percentage`: number (0-100)
-  - `error`: string (if processing failed)
-  - `download_token`: string (when processing completes)
+### Web Status Endpoint
+- GET `/web/status/{task_id}`
+  - Returns processing status and progress information
+  - Includes error details if processing failed
 
-### Download Endpoint
-- GET `/download/{task_id}`: Returns 401 for unauthenticated requests
+### Server Status
+- GET `/api/test`
+  - Returns server configuration and health metrics
+  - Includes model availability and system resource usage
 
-## Processing Stages
+## Development
 
-The API processes data in the following stages:
-1. File extraction (5%)
-2. Image segmentation (5-40%)
-3. Segment processing (40-100%)
+### Git Configuration
+The repository includes a `.gitignore` file that excludes:
+- `node_modules/` directory
+- `package-lock.json`
 
-Each stage may show "Unknown" status between progress updates 
+This ensures that only essential code is tracked in version control. 
