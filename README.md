@@ -59,9 +59,16 @@ venv\Scripts\activate
 
 3. Install dependencies:
 
+For Windows and Linux Machines:
 ```bash
 sudo apt update
 sudo apt install gdal-bin libgdal-dev
+pip install -r requirements.txt
+```
+For MacOS machines:
+```bash
+brew update
+brew install gdal
 pip install -r requirements.txt
 ```
 
