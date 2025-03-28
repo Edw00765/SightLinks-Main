@@ -8,3 +8,4 @@ Pillow>=10.0.0
 tqdm>=4.64.0
 gdal==3.6.4
 folium>=0.19.4
+shapely >=2.0.0
