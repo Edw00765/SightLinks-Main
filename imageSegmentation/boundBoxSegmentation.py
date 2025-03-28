@@ -36,7 +36,7 @@ def boundBoxSegmentationJGW(classificationThreshold=0.35, extractDir = "run/extr
                     imagePath = os.path.join(extractDir, inputFileName)
                     originalImage = Image.open(imagePath)
                     width, height = originalImage.size
-                    chunksOfInterest = classificationSegmentation(inputFileName=imagePath, classificationThreshold=classificationThreshold, classificationChunkSize=classificationChunkSize)
+                    chunksOfInterest = classificationSegmentation(inputFileName=imagePath, classificationThreshold=classificationThreshold, classificationChunkSize=classificationChunkSize, boundBoxChunkSize=boundBoxChunkSize)
                     #data for georeferencing
                     baseName, _ = os.path.splitext(imagePath)
                     jgwPath = baseName + ".jgw"
@@ -105,8 +105,7 @@ def boundBoxSegmentationTIF(classificationThreshold=0.35, extractDir = "run/extr
                     height = dataset.RasterYSize
                     # Get the georeference data (this will be used to preserve georeferencing)
                     geoTransform = dataset.GetGeoTransform()
-                    chunksOfInterest = classificationSegmentation(inputFileName=imagePath, classificationThreshold=classificationThreshold, classificationChunkSize=classificationChunkSize)
-
+                    chunksOfInterest = classificationSegmentation(inputFileName=imagePath, classificationThreshold=classificationThreshold, classificationChunkSize=classificationChunkSize, boundBoxChunkSize=boundBoxChunkSize)
                     for row, col in chunksOfInterest:
                         offset = (boundBoxChunkSize - classificationChunkSize) / 2
                         topX = col * classificationChunkSize - offset if col * classificationChunkSize - offset > 0 else 0
@@ -128,7 +127,8 @@ def boundBoxSegmentationTIF(classificationThreshold=0.35, extractDir = "run/extr
                         cropped = gdal.Translate("", dataset, srcWin=[topX, topY, boundBoxChunkSize, boundBoxChunkSize], 
                                     projWin=[georeferencedTopX, georeferencedTopY, geoTransform[0] + (topX + boundBoxChunkSize) * geoTransform[1], geoTransform[3] + (topY + boundBoxChunkSize) * geoTransform[5]], 
                                     format="MEM")
-                        imageAndDatas.append((inputFileName, cropped, row, col))
+                        baseName, _ = os.path.splitext(inputFileName)
+                        imageAndDatas.append((baseName, cropped, row, col))
                 except Exception as e:
                     print(f"Error opening {imagePath}: {e}")
             pbar.update(1)
