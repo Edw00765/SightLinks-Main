@@ -25,9 +25,11 @@ npm run test:serial
 
 3. Run specific test files:
 ```bash
-npm run test:api-predict    # Run predict endpoint tests
-npm run test:web-status     # Run web status tests
-npm run test:server-status  # Run server status tests
+npm run test:web-predict    # Run web predict interface tests
+npm run test:web-status     # Run web status interface tests
+npm run test:web-download   # Run web download interface tests
+npm run test:web-cancel     # Run web cancel interface tests
+npm run test:utils          # Run utility tests
 ```
 
 ## Test Data Requirements
