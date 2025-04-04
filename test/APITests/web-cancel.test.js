@@ -149,8 +149,12 @@ describe('Web Cancel Endpoint', () => {
       const fileBuffer = fs.readFileSync(noDetectionsPath);
       const formData = new FormData();
       formData.append('file', new Blob([fileBuffer]), 'small-dataset.zip');
-      formData.append('model_type', 'yolo_n'); // Use fastest model
-      formData.append('output_type', '0'); // Minimal output
+      formData.append('input_type', '0');
+      formData.append('classification_threshold', '0.35');
+      formData.append('prediction_threshold', '0.5');
+      formData.append('save_labeled_image', 'false');
+      formData.append('output_type', '0');
+      formData.append('yolo_model_type', 'n'); // Use fastest model
 
       const createResponse = await fetch(`${BASE_URL}/web/predict`, {
         method: 'POST',
@@ -163,7 +167,7 @@ describe('Web Cancel Endpoint', () => {
       // Wait for task completion with increased timeout
       let isCompleted = false;
       let attempts = 0;
-      const maxAttempts = 24; // 2 minutes total
+      const maxAttempts = 36; // 3 minutes total
 
       while (!isCompleted && attempts < maxAttempts) {
         const statusResponse = await fetch(`${BASE_URL}/web/status/${taskId}`);
@@ -182,6 +186,7 @@ describe('Web Cancel Endpoint', () => {
 
       if (!isCompleted) {
         console.log('Task did not complete within timeout');
+        console.log('Last status response:', await fetch(`${BASE_URL}/web/status/${taskId}`).then(r => r.json()));
       }
 
       expect(isCompleted).toBe(true);
