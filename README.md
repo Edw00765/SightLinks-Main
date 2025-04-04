@@ -66,8 +66,6 @@ pip install -r requirements.txt
 ```
 For MacOS machines:
 ```bash
-conda create --name venv python=3.8
-conda activate venv
 conda install -c conda-forge gdal=3.6.4
 pip install -r requirements.txt
 ```
