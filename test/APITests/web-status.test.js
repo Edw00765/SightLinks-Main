@@ -88,13 +88,17 @@ describe('Web Status Endpoint', () => {
     });
 
     it('returns completed task status without detections', async () => {
-      // Use the no-crossings dataset that we know has no detections
-      const noDetectionsPath = path.join('data-and-images', 'digimap-data', 'no-crossings.zip');
+      // Use the no_crossings dataset that we know has no detections
+      const noDetectionsPath = path.join('data-and-images', 'digimap-data', 'no_crossings.zip');
       const fileBuffer = fs.readFileSync(noDetectionsPath);
       const formData = new FormData();
-      formData.append('file', new Blob([fileBuffer]), 'no-crossings.zip');
-      formData.append('model_type', 'yolo_n'); // Use fastest model
-      formData.append('output_type', '0'); // Minimal output
+      formData.append('file', new Blob([fileBuffer]), 'no_crossings.zip');
+      formData.append('input_type', '0');
+      formData.append('classification_threshold', '0.35');
+      formData.append('prediction_threshold', '0.5');
+      formData.append('save_labeled_image', 'false');
+      formData.append('output_type', '0');
+      formData.append('yolo_model_type', 'n'); // Use fastest model
       
       const createResponse = await fetch(`${BASE_URL}/web/predict`, {
         method: 'POST',
@@ -107,7 +111,7 @@ describe('Web Status Endpoint', () => {
       // Wait for task completion (with timeout)
       let isCompleted = false;
       let attempts = 0;
-      const maxAttempts = 120; // 6 minutes total (3 seconds * 120)
+      const maxAttempts = 36; // 3 minutes total (5 seconds * 36)
       let lastError = null;
       let lastStatus = null;
 
@@ -132,7 +136,7 @@ describe('Web Status Endpoint', () => {
           lastError = error;
         }
 
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        await new Promise(resolve => setTimeout(resolve, 5000));
         attempts++;
       }
 
@@ -162,14 +166,18 @@ describe('Web Status Endpoint', () => {
       const createData = await createResponse.json();
       expect(createData).toHaveProperty('task_id');
 
-      // Check status - should have error flag
+      // Wait a bit for the task to process and fail
+      await new Promise(resolve => setTimeout(resolve, 5000));
+
+      // Check status - should have error message
       const statusResponse = await fetch(`${BASE_URL}/web/status/${createData.task_id}`);
       const statusData = await statusResponse.json();
       
+      // Log the actual response for debugging
+      console.log('Status response:', statusData);
+
       // Task should be marked as not completed
-      expect(statusData).toHaveProperty('completed', false);
-      // The API currently doesn't return error flags for invalid parameters
-      // Just verify it's not completed
+      expect(statusData).toEqual({ completed: false });
     });
   });
 }); 
