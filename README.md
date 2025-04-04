@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/abe17d59-5607-472a-ae4e-6b05b1b3a7d5)# SightLinks
+# SightLinks
 
 SightLinks is a computer vision system designed to detect and georeference crosswalks in aerial imagery. It processes .jpg (or .jpeg, .png) with their corresponding .jgw file and .tif files, providing oriented bounding boxes with latitude and longitude coordinates. The system uses a combination of image segmentation, mobileNet detection, YOLO-based detection, georeferencing, and filtering to accurately identify and locate crosswalks in aerial photographs.
 
