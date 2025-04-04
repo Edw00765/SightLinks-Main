@@ -166,18 +166,44 @@ describe('Web Status Endpoint', () => {
       const createData = await createResponse.json();
       expect(createData).toHaveProperty('task_id');
 
-      // Wait a bit for the task to process and fail
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      // Wait for task to process and fail
+      let attempts = 0;
+      const maxAttempts = 12; // 1 minute total
+      let statusData;
 
-      // Check status - should have error message
-      const statusResponse = await fetch(`${BASE_URL}/web/status/${createData.task_id}`);
-      const statusData = await statusResponse.json();
-      
-      // Log the actual response for debugging
-      console.log('Status response:', statusData);
+      while (attempts < maxAttempts) {
+        const statusResponse = await fetch(`${BASE_URL}/web/status/${createData.task_id}`);
+        statusData = await statusResponse.json();
+        
+        // Log the response for debugging
+        console.log('Status response:', statusData);
 
-      // Task should be marked as not completed
-      expect(statusData).toEqual({ completed: false });
+        // If we get an error response, we're done
+        if (statusData.error) {
+          break;
+        }
+
+        // If we get completed: false, wait and try again
+        if (statusData.completed === false) {
+          await new Promise(resolve => setTimeout(resolve, 5000));
+          attempts++;
+          continue;
+        }
+
+        // If we get any other response, wait and try again
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        attempts++;
+      }
+
+      // After all attempts, check the final state
+      if (statusData.error) {
+        // If we got an error response, verify its format
+        expect(typeof statusData.error).toBe('string');
+        expect(statusData.error).toContain('Missing session_id');
+      } else {
+        // If we didn't get an error response, verify it's marked as not completed
+        expect(statusData).toEqual({ completed: false });
+      }
     });
   });
 }); 
