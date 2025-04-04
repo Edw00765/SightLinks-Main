@@ -11,26 +11,6 @@ This test suite verifies the functionality of the Sightlink API endpoints using 
   - `data-and-images/digimap-data/small-dataset.zip`
 
 
-## Test Structure
-
-### API Tests
-
-1. **Predict Endpoint Tests** (`api-predict.test.js`)
-   - Tests the `/predict` endpoint
-   - Verifies file processing with default parameters
-   - Tests custom parameter handling
-   - Includes error handling for invalid requests
-
-2. **Web Status Tests** (`web-status.test.js`)
-   - Tests the `/web/status/{task_id}` endpoint
-   - Verifies task status retrieval
-   - Validates response format and fields
-
-3. **Server Status Tests** (`server-status.test.js`)
-   - Tests server health and configuration
-   - Verifies available models and directories
-   - Monitors system resource usage
-
 ## Running the Tests
 
 1. Install dependencies:
@@ -89,4 +69,29 @@ The repository includes a `.gitignore` file that excludes:
 - `node_modules/` directory
 - `package-lock.json`
 
-This ensures that only essential code is tracked in version control. 
+## Test Commands
+
+Run all tests:
+```bash
+npm run test:serial
+```
+
+Run specific test files:
+```bash
+# Quick API Test
+npm run test:server-status  # Run server status tests
+
+# Web Interface Tests
+npm run test:web-predict    # Run web predict interface tests
+npm run test:web-status     # Run web status interface tests
+npm run test:web-download   # Run web download interface tests
+npm run test:web-cancel     # Run web cancel interface tests
+
+# Utility Tests
+npm run test:utils          # Run utility tests
+```
+
+Run tests with coverage:
+```bash
+npm run test:coverage
+``` 
