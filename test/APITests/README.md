@@ -92,8 +92,3 @@ npm run test:web-cancel     # Run web cancel interface tests
 # Utility Tests
 npm run test:utils          # Run utility tests
 ```
-
-Run tests with coverage:
-```bash
-npm run test:coverage
-``` 
