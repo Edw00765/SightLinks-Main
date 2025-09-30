@@ -30,13 +30,11 @@ def classificationSegmentation(inputFileName, classificationThreshold, classific
     # row and col represents the coordinates for the top left point of the new cropped image
     for row in range(0, height, classificationChunkSize):
         for col in range(0, width, classificationChunkSize):
-            xDifference = 0
-            yDifference = 0
             if col + classificationChunkSize > width:
-                xDifference = col + classificationChunkSize - width
+                col = width - classificationChunkSize
             if row + classificationChunkSize > height:
-                yDifference = row + classificationChunkSize - height
-            box = (col - xDifference, row - yDifference, col - xDifference + classificationChunkSize, row - yDifference + classificationChunkSize)
+                row = height - classificationChunkSize
+            box = (col, row, col + classificationChunkSize, row + classificationChunkSize)
             cropped = image.crop(box)
             containsCrossing = PIL_infer(cropped, threshold=classificationThreshold)
             if containsCrossing:
@@ -54,3 +52,4 @@ def classificationSegmentation(inputFileName, classificationThreshold, classific
                 listOfRowCol.append((rowToAdd, colToAdd))
 
     return listOfRowCol
+
