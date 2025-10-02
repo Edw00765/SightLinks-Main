@@ -23,7 +23,13 @@ def classificationSegmentation(inputFileName, classificationThreshold, classific
     image = Image.open(inputFileName)
     width, height = image.size
 
-    lowerFilteringBound = math.ceil(boundBoxChunkSize / classificationChunkSize) // 2 - 1
+    if (boundBoxChunkSize / classificationChunkSize) % 2 == 1:
+        lowerFilteringBound = (boundBoxChunkSize / classificationChunkSize) // 2
+    else:
+        n = math.floor(boundBoxChunkSize / classificationChunkSize)
+        if n % 2 == 0 and n > 0:
+            n -= 1
+        lowerFilteringBound = n // 2
     upperWidthFilteringBound = math.ceil(width / classificationChunkSize) - 1 - lowerFilteringBound
     upperHeightFilteringBound = math.ceil(height / classificationChunkSize) - 1 - lowerFilteringBound
     listOfRowCol = []
@@ -54,5 +60,6 @@ def classificationSegmentation(inputFileName, classificationThreshold, classific
                 listOfRowCol.append((rowToAdd, colToAdd))
 
     return listOfRowCol
+
 
 
