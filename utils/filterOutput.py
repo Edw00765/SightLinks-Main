@@ -91,7 +91,10 @@ def removeDuplicateBoxesRC(imageDetectionsRowCol, boundBoxChunkSize, classificat
     
     This function directly modifies the `imageDetectionsRowCol` dictionary by removing duplicate boxes.
     """
-    checkArea = math.ceil(boundBoxChunkSize / classificationChunkSize) + 1
+    if (boundBoxChunkSize / classificationChunkSize) % 2 == 1:
+        checkArea = boundBoxChunkSize // classificationChunkSize
+    else:
+        checkArea = math.ceil(boundBoxChunkSize / classificationChunkSize) + 1
     with tqdm(total=len(imageDetectionsRowCol), desc="Filtering crosswalks") as pbar:
         for currentKeyToFilter in imageDetectionsRowCol:
             allPointsList, allConfidenceList = imageDetectionsRowCol[currentKeyToFilter]
@@ -136,3 +139,4 @@ def removeDuplicateBoxesRC(imageDetectionsRowCol, boundBoxChunkSize, classificat
             imageDetectionsRowCol[currentKeyToFilter][1] = [conf for i, conf in enumerate(allConfidenceList) if i not in toRemove]
 
             pbar.update(1)
+
